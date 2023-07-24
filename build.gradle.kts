@@ -1,11 +1,9 @@
-import org.jetbrains.kotlin.js.translate.context.Namer.kotlin
-
 plugins {
     `kotlin-dsl`
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1" // only on root project
-  //  id("io.cloudshiftdev.release-plugin") version "0.1.8"
+//    id("io.cloudshiftdev.release-plugin") version "0.1.9"
 }
 
 gradlePlugin {
@@ -14,7 +12,7 @@ gradlePlugin {
             id = "io.cloudshiftdev.release-plugin"
             implementationClass = "cloudshift.gradle.release.ReleasePlugin"
             displayName = "Gradle Release Plugin"
-            description = "Automate release management / versioning"
+            description = project.description
         }
     }
 }
@@ -126,43 +124,42 @@ kotlin {
 
 // ugh.  afterEvaluate necessary as java-gradle-plugin adds marker publication in afterEvaluate.
 // without this the marker POM is missing name & description, failing MavenCentral requirements.
-afterEvaluate {
-    publishing.publications.withType<MavenPublication>()
-        .configureEach {
+publishing.publications.withType<MavenPublication>()
+    .configureEach {
 
-            pluginManager.withPlugin("java-base") {
-                versionMapping {
-                    usage("java-api") { fromResolutionOf("runtimeClasspath") }
-                    usage("java-runtime") { fromResolutionResult() }
+        pluginManager.withPlugin("java-base") {
+            versionMapping {
+                usage("java-api") { fromResolutionOf("runtimeClasspath") }
+                usage("java-runtime") { fromResolutionResult() }
+            }
+        }
+
+        pom {
+            name = provider { project.name }
+            description = provider { project.description }
+            url = provider { "https://github.com/cloudshiftinc/gradle-release-plugin" }
+            licenses {
+                license {
+                    name = "Apache License, version 2.0"
+                    url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
                 }
             }
 
-            pom {
-                name = provider { project.name }
-                description = "Gradle release/version management plugin"
+            scm {
+                connection = "scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/"
+                developerConnection = "scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git"
                 url = "https://github.com/cloudshiftinc/gradle-release-plugin"
-                licenses {
-                    license {
-                        name = "Apache License, version 2.0"
-                        url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
-                    }
-                }
+            }
 
-                scm {
-                    connection = "scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/"
-                    developerConnection = "scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git"
-                    url = "https://github.com/cloudshiftinc/gradle-release-plugin"
-                }
-
-                developers {
-                    developer {
-                        name = "Chris Lee"
-                        email = "chris@cloudshiftconsulting.com"
-                    }
+            developers {
+                developer {
+                    name = "Chris Lee"
+                    email = "chris@cloudshiftconsulting.com"
                 }
             }
         }
-}
+    }
+
 
 signing {
     val signingKey: String? by project

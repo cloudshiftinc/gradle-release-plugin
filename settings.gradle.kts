@@ -6,7 +6,7 @@ pluginManagement {
     require(JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
         "This build requires Gradle to be run with at least Java 17"
     }
-    includeBuild("build-logic")
+ //   includeBuild("build-logic")
     repositories {
         gradlePluginPortal()
         mavenCentral()

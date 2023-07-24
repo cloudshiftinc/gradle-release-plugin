@@ -12,5 +12,5 @@ dependencies {
 dependencies {
 
     // workaround for using version catalog in precompiled script plugins
-    implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+  //  implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }

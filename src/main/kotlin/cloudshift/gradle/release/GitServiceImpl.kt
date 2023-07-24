@@ -46,11 +46,10 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
         val cmdResult = git(GitCommands.CurrentBranch)
         if (cmdResult.output.isBlank()) error("Not currently on a branch")
         val patternStr = parameters.releaseBranchPattern.get()
-        if(patternStr.isBlank()) return
+        if (patternStr.isBlank()) return
         val pattern = Regex(patternStr)
         pattern.matchEntire(cmdResult.output) ?: error("Currently on branch ${cmdResult.output}; required branches for release: $patternStr")
     }
-
 
     override fun localUnstagedFiles(): GitOutput = git(GitCommands.LocalUnstagedFiles)
 
@@ -71,7 +70,6 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
     override fun push() {
         git("push", "--porcelain")
     }
-
 
     private fun git(vararg args: String, block: (GitDsl).() -> Unit = {}) = git(args.toList(), block)
 
@@ -124,5 +122,4 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
             this.args.addAll(args.toList())
         }
     }
-
 }
