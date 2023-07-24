@@ -123,36 +123,36 @@ kotlin {
 
 publishing {
     publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
-
-            pom {
-                name.set("gradle-release-plugin")
-                description.set("Gradle release/version management plugin")
-                url.set("https://github.com/cloudshiftinc/gradle-release-plugin")
-
-                licenses {
-                    license {
-                        name.set("Apache License, version 2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/")
-                    developerConnection.set("scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git")
-                    url.set("https://github.com/cloudshiftinc/gradle-release-plugin")
-                }
-
-                developers {
-                    developer {
-                        id.set("cloudshiftchris")
-                        name.set("Chris Lee")
-                        email.set("chris@cloudshiftconsulting.com")
-                    }
-                }
-            }
-        }
+//        create<MavenPublication>("mavenJava") {
+//            from(components["java"])
+//
+//            pom {
+//                name.set("gradle-release-plugin")
+//                description.set("Gradle release/version management plugin")
+//                url.set("https://github.com/cloudshiftinc/gradle-release-plugin")
+//
+//                licenses {
+//                    license {
+//                        name.set("Apache License, version 2.0")
+//                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+//                    }
+//                }
+//
+//                scm {
+//                    connection.set("scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/")
+//                    developerConnection.set("scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git")
+//                    url.set("https://github.com/cloudshiftinc/gradle-release-plugin")
+//                }
+//
+//                developers {
+//                    developer {
+//                        id.set("cloudshiftchris")
+//                        name.set("Chris Lee")
+//                        email.set("chris@cloudshiftconsulting.com")
+//                    }
+//                }
+//            }
+//        }
     }
 }
 
@@ -160,7 +160,7 @@ signing {
     val signingKey: String? by project
     val signingPassword: String? by project
     useInMemoryPgpKeys(signingKey, signingPassword)
-    sign(publishing.publications["mavenJava"])
+    sign(publishing.publications["pluginMaven"])
 }
 
 val publishingPredicate =
