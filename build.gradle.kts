@@ -7,7 +7,7 @@ plugins {
 
 gradlePlugin {
     plugins {
-        create("cloudshiftReleasePlugin") {
+        create("cloudshiftRelease") {
             id = "cloudshift.release-plugin"
             implementationClass = "cloudshift.gradle.release.ReleasePlugin"
         }
