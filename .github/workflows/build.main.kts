@@ -13,7 +13,7 @@ import io.github.typesafegithub.workflows.dsl.workflow
 import io.github.typesafegithub.workflows.yaml.writeToFile
 
 workflow(
-    name = "Build Kotlin AWS CDK DSL",
+    name = "Build Gradle Release Plugin",
     on = listOf(Push(), PullRequest()),
     sourceFile = __FILE__.toPath(),
     env = linkedMapOf(
