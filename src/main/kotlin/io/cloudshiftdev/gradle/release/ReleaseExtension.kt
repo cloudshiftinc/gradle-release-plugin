@@ -50,6 +50,14 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
      */
     public abstract val newVersionCommitMessage: Property<String>
 
+    /**
+     * When set, use the specified branch to commit the release, with the next version
+     * commit on the working branch.
+     *
+     * Default: **empty**
+     */
+   // public abstract val pushReleaseVersionBranch : Property<String>
+
     internal abstract val preReleaseHooks: ListProperty<PreReleaseHookSpec<*>>
 
     internal val checks: Checks = objects.newInstance<Checks>()
@@ -157,6 +165,20 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
          * Default: **main**
          */
         public abstract val releaseBranchPattern : Property<String>
+
+        /**
+         * List of options to use during a commit, e.g. '-s'
+         *
+         * Default: **empty**
+         */
+        public abstract val commitOptions : ListProperty<String>
+
+        /**
+         * List of options to use during a push, e.g. '--no-verify'
+         *
+         * Default: **empty**
+         */
+        public abstract val pushOptions : ListProperty<String>
     }
 }
 

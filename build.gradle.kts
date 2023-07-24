@@ -105,45 +105,6 @@ kotlin {
 //        }
 //    }
 //}
-/*
-
-// NOTE: _always_ use providers for name, description due to the use of afterEvaluate in the java-gradle-plugin
-publishing.publications.withType<MavenPublication>() {
-
-        pluginManager.withPlugin("java-base") {
-            versionMapping {
-                usage("java-api") { fromResolutionOf("runtimeClasspath") }
-                usage("java-runtime") { fromResolutionResult() }
-            }
-        }
-
-        pom {
-            name = provider { project.name }
-            description = provider { project.description }
-            url = provider { "https://github.com/cloudshiftinc/gradle-release-plugin" }
-            licenses {
-                license {
-                    name = "Apache License, version 2.0"
-                    url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
-                }
-            }
-
-            scm {
-                connection = "scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/"
-                developerConnection = "scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git"
-                url = "https://github.com/cloudshiftinc/gradle-release-plugin"
-            }
-
-            developers {
-                developer {
-                    name = "Chris Lee"
-                    email = "chris@cloudshiftconsulting.com"
-                }
-            }
-        }
-    }
-*/
-
 
 signing {
     val signingKey: String? by project
@@ -154,7 +115,7 @@ signing {
 
 val publishingPredicate =
     provider {
-        val ci = System.getenv()["CI"] == "true"
+
         System.getenv()
             .filter {
                 it.key.startsWith("GITHUB_") &&
@@ -167,9 +128,11 @@ val publishingPredicate =
         val eventName = System.getenv()["GITHUB_EVENT_NAME"]
         val refName = System.getenv()["GITHUB_REF_NAME"]
 
-        val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
+        val ci = System.getenv()["CI"] == "true"
+        val isSnapshot = project.version.toString()
+            .endsWith("-SNAPSHOT")
         when {
-            !ci || isSnapshot-> false
+            !ci || isSnapshot -> false
             eventName == "push" && refName == "main" -> true
             // TODO - handle PR merges
             else -> false
