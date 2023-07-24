@@ -3,6 +3,7 @@ plugins {
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1" // only on root project
+    id("io.cloudshiftdev.release-plugin") version "0.1.5"
 }
 
 gradlePlugin {
@@ -120,7 +121,7 @@ kotlin {
 //    }
 //}
 
-// ugh.  necessary as java-gradle-plugin adds marker publication in afterEvaluate.
+// ugh.  afterEvaluate necessary as java-gradle-plugin adds marker publication in afterEvaluate.
 // without this the marker POM is missing name & description, failing MavenCentral requirements.
 afterEvaluate {
     publishing.publications.withType<MavenPublication>()

@@ -1,7 +1,10 @@
+@file:Suppress("KDocUnresolvedReference")
+
 package cloudshift.gradle.release
 
 import cloudshift.gradle.release.hooks.PreProcessFilesHook
 import cloudshift.gradle.release.tasks.PreReleaseHook
+import org.gradle.api.Action
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
@@ -54,8 +57,8 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
     /**
      * Configure pre-release checks
      */
-    public fun checks(block: (Checks).() -> Unit) {
-        checks.apply(block)
+    public fun checks(action: Action<Checks>) {
+        action.execute(checks)
     }
 
     public abstract class Checks {
@@ -93,8 +96,8 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
     /**
      * Configure where the version property lives.
      */
-    public fun versionProperties(block: (VersionProperties).() -> Unit) {
-        versionProperties.apply(block)
+    public fun versionProperties(action : Action<VersionProperties>) {
+        action.execute(versionProperties)
     }
 
     public abstract class VersionProperties {
@@ -141,9 +144,9 @@ internal class PreReleaseHookSpec<T : PreReleaseHook>(val klass: KClass<T>, val 
  *
  * Commonly used to insert version number into documentation files, such as README.md.
  */
-public fun ReleaseExtension.preProcessFiles(block: (PreProcessFilesDsl).() -> Unit) {
+public fun ReleaseExtension.preProcessFiles(action : Action<PreProcessFilesDsl>) {
     val dsl = PreProcessFilesDsl()
-    dsl.apply(block)
+    action.execute(dsl)
 
     val templateSpecs = dsl.templateSpecs
     val replacementSpecs = dsl.replacementSpecs
@@ -159,18 +162,18 @@ public class PreProcessFilesDsl {
     /**
      *
      */
-    public fun templates(sourceDir: Any, destinationDir: Any, block: (TemplateDsl).() -> Unit = {}) {
+    public fun templates(sourceDir: Any, destinationDir: Any, action : Action<TemplateDsl>) {
         val dsl = TemplateDsl(sourceDir, destinationDir)
-        dsl.apply(block)
+        action.execute(dsl)
         templateSpecs.add(dsl.build())
     }
 
     /**
      *
      */
-    public fun replacements(block: (ReplacementDsl).() -> Unit) {
+    public fun replacements(action : Action<ReplacementDsl>) {
         val dsl = ReplacementDsl()
-        dsl.apply(block)
+        action.execute(dsl)
         replacementSpecs.add(dsl.build())
     }
 
