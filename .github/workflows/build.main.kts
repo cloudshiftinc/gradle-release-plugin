@@ -24,12 +24,12 @@ workflow(
         "ORG_GRADLE_PROJECT_sonatypePassword" to expr("secrets.SONATYPEPASSWORD"),
     )
 ) {
-    job(id = "build", runsOn = RunnerType.Labelled("Large_Runner")) {
+    job(id = "build", runsOn = RunnerType.UbuntuLatest) {
         uses(name = "checkout", action = CheckoutV3())
         uses(
             name = "Set up JDK", action = SetupJavaV3(
                 javaVersion = "17",
-                distribution = SetupJavaV3.Distribution.Corretto,
+                distribution = SetupJavaV3.Distribution.Temurin,
                 checkLatest = true
             )
         )
