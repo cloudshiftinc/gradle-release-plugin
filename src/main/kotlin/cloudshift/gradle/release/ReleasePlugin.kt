@@ -22,21 +22,26 @@ import org.gradle.kotlin.dsl.assign
 import org.gradle.util.GradleVersion
 
 public abstract class ReleasePlugin : Plugin<Project> {
+
     override fun apply(project: Project) : Unit = project.run {
 
         val minimumGradleVersion = "8.0"
         require(GradleVersion.current() >= GradleVersion.version(minimumGradleVersion) ) { "A minimum of Gradle $minimumGradleVersion is required for the CloudShift Gradle Release Plugin"}
+        
+        val releaseExtension = createReleaseExtension()
 
-        val gitServiceProvider = gradle.sharedServices.registerIfAbsent("gitService", GitServiceImpl::class) {}
-
+        val gitServiceProvider = gradle.sharedServices.registerIfAbsent("gitService", GitServiceImpl::class) {
+            parameters {
+                releaseBranchPattern = releaseExtension.git.releaseBranchPattern
+            }
+        }
+        
         // configure all release tasks (this catches tasks added later)
         tasks.withType<AbstractReleaseTask>().configureEach {
             gitService = gitServiceProvider
             group = "release"
         }
-
-        val releaseExtension = createReleaseExtension()
-
+        
         val checkRelease by tasks.registering
 
         val preRelease by tasks.registering {
@@ -58,6 +63,8 @@ public abstract class ReleasePlugin : Plugin<Project> {
             newVersionCommitMessage = releaseExtension.newVersionCommitMessage
 
             preReleaseHooks = releaseExtension.preReleaseHooks
+
+            signTag = releaseExtension.git.signTag
         }
 
         val release by tasks.registering {
@@ -110,6 +117,10 @@ public abstract class ReleasePlugin : Plugin<Project> {
             versionProperties {
                 propertiesFile.convention(layout.projectDirectory.file("gradle.properties"))
                 propertyName.convention("version")
+            }
+
+            git {
+                signTag.convention(false)
             }
 
             releaseCommitMessage.convention("[Release] - release commit:")

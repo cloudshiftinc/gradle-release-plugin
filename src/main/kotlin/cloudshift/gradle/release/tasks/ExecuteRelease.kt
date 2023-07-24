@@ -22,6 +22,9 @@ public abstract class ExecuteRelease
 @Inject
 constructor(private val objects: ObjectFactory, private val fs: FileSystemOperations) : AbstractReleaseTask() {
     @get:Internal
+    internal abstract val signTag: Property<Boolean>
+
+    @get:Internal
     internal abstract val preReleaseHooks: ListProperty<PreReleaseHookSpec<*>>
 
     @get:InputFile
@@ -65,7 +68,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
         // tag with incremented version
         val versionTag = versionTagTemplate.get()
             .replace("\$version", versions.version.toString())
-        git.tag(versionTag, "${versionTagCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}")
+        git.tag(versionTag, "${versionTagCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}", signTag.get())
 
         // push everything; this finalizes the release
         git.push()

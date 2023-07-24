@@ -3,7 +3,7 @@ plugins {
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1" // only on root project
- //   id("io.cloudshiftdev.release-plugin") version "0.1.5"
+    //   id("io.cloudshiftdev.release-plugin") version "0.1.6"
 }
 
 gradlePlugin {
@@ -11,6 +11,8 @@ gradlePlugin {
         create("cloudshiftRelease") {
             id = "io.cloudshiftdev.release-plugin"
             implementationClass = "cloudshift.gradle.release.ReleasePlugin"
+            displayName = "Gradle Release Plugin"
+            description = "Automate release management / versioning"
         }
     }
 }
@@ -95,7 +97,6 @@ kotlin {
 }
 
 
-
 //val noLocalChanges = tasks.register<NoLocalChanges>("noLocalChanges") {
 //    group = LifecycleBasePlugin.VERIFICATION_GROUP
 //    onlyIf { System.getenv()["CI"] != null }
@@ -126,6 +127,14 @@ kotlin {
 afterEvaluate {
     publishing.publications.withType<MavenPublication>()
         .configureEach {
+
+            pluginManager.withPlugin("java-base") {
+                versionMapping {
+                    usage("java-api") { fromResolutionOf("runtimeClasspath") }
+                    usage("java-runtime") { fromResolutionResult() }
+                }
+            }
+
             pom {
                 name = provider { project.name }
                 description = "Gradle release/version management plugin"
@@ -183,7 +192,8 @@ val publishingPredicate =
         }
     }
 
-tasks.withType<PublishToMavenRepository>().configureEach {
+tasks.withType<PublishToMavenRepository>()
+    .configureEach {
         onlyIf("Publishing only allowed on CI") {
             publishingPredicate.get()
         }

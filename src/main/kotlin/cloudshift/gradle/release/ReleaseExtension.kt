@@ -135,6 +135,29 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
     public fun <T : PreReleaseHook> preReleaseHook(type: KClass<T>, vararg parameters: Any) {
         preReleaseHooks.add(PreReleaseHookSpec(klass = type, parameters))
     }
+
+    public val git: Git = objects.newInstance<Git>()
+
+    public fun git(action : Action<Git>) {
+        action.execute(git)
+    }
+
+    public abstract class Git {
+
+        /**
+         * Whether to sign git tags.
+         *
+         * Default: **false**
+         */
+        public abstract val signTag : Property<Boolean>
+
+        /**
+         * Regex for branches which releases must be done off of.  Set to empty string to ignore.
+         *
+         * Default: **main**
+         */
+        public abstract val releaseBranchPattern : Property<String>
+    }
 }
 
 internal class PreReleaseHookSpec<T : PreReleaseHook>(val klass: KClass<T>, val parameters: Array<out Any>)

@@ -3,6 +3,7 @@ package cloudshift.gradle.release
 import cloudshift.gradle.release.GitService.GitOutput
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.process.ExecOperations
@@ -10,10 +11,15 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.inject.Inject
 
+
 internal abstract class GitServiceImpl
 @Inject
-constructor(private val execOps: ExecOperations) : BuildService<BuildServiceParameters.None>, GitService {
+constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.Params>, GitService {
     private val logger = Logging.getLogger(GitServiceImpl::class.java)
+
+    internal interface Params : BuildServiceParameters {
+        val releaseBranchPattern: Property<String>
+    }
 
     private object GitCommands {
         // Unstaged files: git diff --name-status
@@ -27,7 +33,24 @@ constructor(private val execOps: ExecOperations) : BuildService<BuildServicePara
 
         // remote commits to be pulled: git log ..@{u}
         val RemoteOutstandingCommits = listOf("log", "..@{u}")
+
+        // current branch (see https://git-blame.blogspot.com/2013/06/checking-current-branch-programatically.html)
+        val CurrentBranch = listOf("symbolic-ref", "--short", "-q", "HEAD")
     }
+
+    init {
+        verifyReleaseBranch()
+    }
+
+    private fun verifyReleaseBranch() {
+        val cmdResult = git(GitCommands.CurrentBranch)
+        if (cmdResult.output.isBlank()) error("Not currently on a branch")
+        val patternStr = parameters.releaseBranchPattern.get()
+        if(patternStr.isBlank()) return
+        val pattern = Regex(patternStr)
+        pattern.matchEntire(cmdResult.output) ?: error("Currently on branch ${cmdResult.output}; required branches for release: $patternStr")
+    }
+
 
     override fun localUnstagedFiles(): GitOutput = git(GitCommands.LocalUnstagedFiles)
 
@@ -85,8 +108,10 @@ constructor(private val execOps: ExecOperations) : BuildService<BuildServicePara
         }
     }
 
-    override fun tag(tagName: String, tagMessage: String) {
-        git("tag", "-a", tagName, "-m", tagMessage)
+    override fun tag(tagName: String, tagMessage: String, signTag: Boolean) {
+        val args = mutableListOf("tag", "-a", tagName, "-m", tagMessage)
+        if (signTag) args.add("-s")
+        git(args)
     }
 
     override fun restore(file: File) {
