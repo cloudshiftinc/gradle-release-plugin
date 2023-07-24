@@ -21,7 +21,7 @@ import org.gradle.kotlin.dsl.withType
 import org.gradle.kotlin.dsl.assign
 import org.gradle.util.GradleVersion
 
-public abstract class ReleasePlugin : Plugin<Project> {
+public class ReleasePlugin : Plugin<Project> {
 
     override fun apply(project: Project) : Unit = project.run {
 

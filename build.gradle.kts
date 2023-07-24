@@ -1,9 +1,11 @@
+import org.jetbrains.kotlin.js.translate.context.Namer.kotlin
+
 plugins {
     `kotlin-dsl`
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1" // only on root project
-    //   id("io.cloudshiftdev.release-plugin") version "0.1.6"
+  //  id("io.cloudshiftdev.release-plugin") version "0.1.8"
 }
 
 gradlePlugin {
