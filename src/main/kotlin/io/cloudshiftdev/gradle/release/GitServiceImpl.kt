@@ -3,7 +3,6 @@ package io.cloudshiftdev.gradle.release
 import io.cloudshiftdev.gradle.release.GitService.GitOutput
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logging
-import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
@@ -20,9 +19,6 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
 
     internal interface Params : BuildServiceParameters {
         val releaseBranchPattern: Property<String>
-        val signTag: Property<Boolean>
-        val commitOptions: ListProperty<String>
-        val pushOptions: ListProperty<String>
     }
 
     private object GitCommands {
@@ -68,12 +64,10 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
     }
 
     override fun commit(commitMessage: String) {
-        val args = mutableListOf("commit", "-m", commitMessage) + parameters.commitOptions.get()
-        git(args)
+        git("commit", "-m", commitMessage)
     }
 
     override fun push() {
-        val args = mutableListOf("push", "--porcelain") + parameters.pushOptions.get()
         git("push", "--porcelain")
     }
 
@@ -112,9 +106,9 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
         }
     }
 
-    override fun tag(tagName: String, tagMessage: String) {
+    override fun tag(tagName: String, tagMessage: String, signTag: Boolean) {
         val args = mutableListOf("tag", "-a", tagName, "-m", tagMessage)
-        if (parameters.signTag.get()) args.add("-s")
+        if (signTag) args.add("-s")
         git(args)
     }
 

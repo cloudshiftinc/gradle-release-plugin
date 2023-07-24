@@ -33,9 +33,6 @@ public abstract class ReleasePlugin : Plugin<Project> {
         val gitServiceProvider = gradle.sharedServices.registerIfAbsent("gitService", GitServiceImpl::class) {
             parameters {
                 releaseBranchPattern = releaseExtension.git.releaseBranchPattern
-                signTag = releaseExtension.git.signTag
-                commitOptions = releaseExtension.git.commitOptions
-                pushOptions = releaseExtension.git.pushOptions
             }
         }
 
@@ -66,6 +63,8 @@ public abstract class ReleasePlugin : Plugin<Project> {
             newVersionCommitMessage = releaseExtension.newVersionCommitMessage
 
             preReleaseHooks = releaseExtension.preReleaseHooks
+
+            signTag = releaseExtension.git.signTag
         }
 
         val release by tasks.registering {

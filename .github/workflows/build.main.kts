@@ -20,6 +20,8 @@ workflow(
         "GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED" to "false",
         "ORG_GRADLE_PROJECT_signingKey" to expr("secrets.SIGNING_KEY"),
         "ORG_GRADLE_PROJECT_signingPassword" to expr("secrets.SIGNING_PASSWORD"),
+        "ORG_GRADLE_PROJECT_sonatypeUsername" to expr("secrets.SONATYPEUSERNAME"),
+        "ORG_GRADLE_PROJECT_sonatypePassword" to expr("secrets.SONATYPEPASSWORD"),
         "GRADLE_PUBLISH_KEY" to expr("secrets.PLUGIN_PORTAL_KEY"),
         "GRADLE_PUBLISH_SECRET" to expr("secrets.PLUGIN_PORTAL_SECRET"),
     )
