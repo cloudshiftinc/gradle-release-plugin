@@ -1,3 +1,5 @@
+import com.gradle.publish.PublishTask
+
 plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
@@ -182,5 +184,11 @@ tasks.withType<PublishToMavenRepository>()
             publishingPredicate.get()
         }
     }
+
+tasks.withType<PublishTask>().configureEach {
+    onlyIf("Publishing only allowed on CI for non-snapshot releases") {
+        publishingPredicate.get()
+    }
+}
 
 
