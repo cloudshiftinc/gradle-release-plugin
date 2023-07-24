@@ -2,13 +2,29 @@
 
 package io.cloudshiftdev.gradle.release
 
+import io.cloudshiftdev.gradle.release.tasks.AbstractReleaseTask
+import io.cloudshiftdev.gradle.release.tasks.CheckLocalOutstandingCommits
+import io.cloudshiftdev.gradle.release.tasks.CheckLocalStagedFiles
+import io.cloudshiftdev.gradle.release.tasks.CheckLocalUnstagedFiles
+import io.cloudshiftdev.gradle.release.tasks.CheckRemoteOutstandingCommits
+import io.cloudshiftdev.gradle.release.tasks.ExecuteRelease
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.tasks.TaskProvider
+import org.gradle.kotlin.dsl.create
+import org.gradle.kotlin.dsl.getValue
+import org.gradle.kotlin.dsl.provideDelegate
+import org.gradle.kotlin.dsl.registerIfAbsent
+import org.gradle.kotlin.dsl.registering
+import org.gradle.kotlin.dsl.withType
+import org.gradle.kotlin.dsl.assign
+import org.gradle.util.GradleVersion
 
 public abstract class ReleasePlugin : Plugin<Project> {
 
     override fun apply(project: Project) : Unit = project.run {
-/*
+
         val minimumGradleVersion = "8.0"
         require(GradleVersion.current() >= GradleVersion.version(minimumGradleVersion) ) { "A minimum of Gradle $minimumGradleVersion is required for the CloudShift Gradle Release Plugin"}
 
@@ -56,10 +72,10 @@ public abstract class ReleasePlugin : Plugin<Project> {
             dependsOn(executeRelease)
         }
 
-        registerPreReleaseChecks(releaseExtension, checkRelease)*/
+        registerPreReleaseChecks(releaseExtension, checkRelease)
     }
 
-   /* private fun Project.registerPreReleaseChecks(
+    private fun Project.registerPreReleaseChecks(
         releaseExtension: ReleaseExtension,
         checkRelease: TaskProvider<Task>
     ) {
@@ -116,5 +132,5 @@ public abstract class ReleasePlugin : Plugin<Project> {
             newVersionCommitMessage.convention("[Release] - new version commit:")
         }
         return releaseExtension
-    }*/
+    }
 }

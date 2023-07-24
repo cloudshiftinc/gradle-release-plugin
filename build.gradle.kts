@@ -1,27 +1,19 @@
 plugins {
     `kotlin-dsl`
-    `maven-publish`
+    id("com.gradle.plugin-publish") version "1.2.0"
     signing
-    id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1" // only on root project
-//    id("io.cloudshiftdev.release-plugin") version "0.1.12"
 }
 
 gradlePlugin {
+    website = "https://github.com/cloudshiftinc/gradle-release-plugin"
+    vcsUrl = "https://github.com/cloudshiftinc/gradle-release-plugin"
     plugins {
         create("cloudshiftRelease") {
             id = "io.cloudshiftdev.release-plugin"
             implementationClass = "io.cloudshiftdev.gradle.release.ReleasePlugin"
             displayName = "Gradle Release Plugin"
             description = project.description
-        }
-    }
-}
-
-nexusPublishing {
-    this.repositories {
-        sonatype { // only for users registered in Sonatype after 24 Feb 2021
-            nexusUrl = uri("https://s01.oss.sonatype.org/service/local/")
-            snapshotRepositoryUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            tags = listOf("release", "version", "release management")
         }
     }
 }
@@ -81,14 +73,6 @@ tasks.withType<AbstractArchiveTask>()
         isReproducibleFileOrder = true
     }
 
-java {
-    withJavadocJar()
-    withSourcesJar()
-    consistentResolution {
-        useCompileClasspathVersions()
-    }
-}
-
 kotlin {
     explicitApi()
     jvmToolchain {
@@ -121,6 +105,7 @@ kotlin {
 //        }
 //    }
 //}
+/*
 
 // NOTE: _always_ use providers for name, description due to the use of afterEvaluate in the java-gradle-plugin
 publishing.publications.withType<MavenPublication>() {
@@ -157,6 +142,7 @@ publishing.publications.withType<MavenPublication>() {
             }
         }
     }
+*/
 
 
 signing {
@@ -181,8 +167,9 @@ val publishingPredicate =
         val eventName = System.getenv()["GITHUB_EVENT_NAME"]
         val refName = System.getenv()["GITHUB_REF_NAME"]
 
+        val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
         when {
-            !ci -> false
+            !ci || isSnapshot-> false
             eventName == "push" && refName == "main" -> true
             // TODO - handle PR merges
             else -> false
@@ -191,21 +178,9 @@ val publishingPredicate =
 
 tasks.withType<PublishToMavenRepository>()
     .configureEach {
-        onlyIf("Publishing only allowed on CI") {
+        onlyIf("Publishing only allowed on CI for non-snapshot releases") {
             publishingPredicate.get()
         }
     }
 
-/*
-For a push on main:
-
-Publishing env: GITHUB_REF_TYPE -> branch
-Publishing env: GITHUB_REF -> refs/heads/main
-Publishing env: GITHUB_BASE_REF ->
-Publishing env: GITHUB_EVENT_NAME -> push
-Publishing env: GITHUB_WORKFLOW_REF -> cloudshiftinc/awscdk-dsl-kotlin/.github/workflows/build.yaml@refs/heads/main
-Publishing env: GITHUB_REF_NAME -> main
-Publishing env: GITHUB_HEAD_REF ->
-
- */
 

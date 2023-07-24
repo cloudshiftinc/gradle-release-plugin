@@ -22,6 +22,8 @@ workflow(
         "ORG_GRADLE_PROJECT_signingPassword" to expr("secrets.SIGNING_PASSWORD"),
         "ORG_GRADLE_PROJECT_sonatypeUsername" to expr("secrets.SONATYPEUSERNAME"),
         "ORG_GRADLE_PROJECT_sonatypePassword" to expr("secrets.SONATYPEPASSWORD"),
+        "GRADLE_PUBLISH_KEY" to expr("secrets.PLUGIN_PORTAL_KEY"),
+        "GRADLE_PUBLISH_SECRET" to expr("secrets.PLUGIN_PORTAL_SECRET"),
     )
 ) {
     job(id = "build", runsOn = RunnerType.UbuntuLatest) {
@@ -38,13 +40,7 @@ workflow(
                 gradleVersion = "wrapper",
                 gradleHomeCacheCleanup = true,
                 gradleHomeCacheIncludes = listOf("jdks", "caches", "notifications"),
-                arguments = "build --info --scan --stacktrace"
-            )
-        )
-        uses(
-            name = "publish", action = GradleBuildActionV2(
-                gradleVersion = "wrapper",
-                arguments = "publishToSonatype closeAndReleaseSonatypeStagingRepository --info --stacktrace --no-configuration-cache"
+                arguments = "build publish -Pgradle.publish.key=\$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=\$GRADLE_PUBLISH_SECRET --info --scan --stacktrace --no-configuration-cache"
             )
         )
     }
