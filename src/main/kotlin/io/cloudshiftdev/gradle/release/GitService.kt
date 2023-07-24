@@ -1,4 +1,4 @@
-package cloudshift.gradle.release
+package io.cloudshiftdev.gradle.release
 
 import java.io.File
 

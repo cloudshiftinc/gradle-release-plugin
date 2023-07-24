@@ -1,4 +1,4 @@
-package cloudshift.gradle.release.tasks
+package io.cloudshiftdev.gradle.release.tasks
 
 import io.github.z4kn4fein.semver.Version
 import java.io.File

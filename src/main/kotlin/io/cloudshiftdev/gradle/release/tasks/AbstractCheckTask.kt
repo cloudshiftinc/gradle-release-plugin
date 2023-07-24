@@ -1,6 +1,6 @@
-package cloudshift.gradle.release.tasks
+package io.cloudshiftdev.gradle.release.tasks
 
-import cloudshift.gradle.release.GitService
+import io.cloudshiftdev.gradle.release.GitService
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal

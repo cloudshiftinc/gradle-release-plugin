@@ -1,8 +1,8 @@
 @file:Suppress("UnstableApiUsage")
 
-package cloudshift.gradle.release.hooks
+package io.cloudshiftdev.gradle.release.hooks
 
-import cloudshift.gradle.release.tasks.PreReleaseHook
+import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import com.google.common.hash.Hashing
 import io.github.z4kn4fein.semver.Version
 import org.gradle.api.file.FileSystemOperations

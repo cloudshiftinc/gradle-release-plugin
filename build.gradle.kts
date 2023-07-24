@@ -3,14 +3,14 @@ plugins {
     `maven-publish`
     signing
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0-rc-1" // only on root project
-//    id("io.cloudshiftdev.release-plugin") version "0.1.9"
+ //   id("io.cloudshiftdev.release-plugin") version "0.1.10"
 }
 
 gradlePlugin {
     plugins {
         create("cloudshiftRelease") {
             id = "io.cloudshiftdev.release-plugin"
-            implementationClass = "cloudshift.gradle.release.ReleasePlugin"
+            implementationClass = "io.cloudshiftdev.gradle.release.ReleasePlugin"
             displayName = "Gradle Release Plugin"
             description = project.description
         }
@@ -122,10 +122,8 @@ kotlin {
 //    }
 //}
 
-// ugh.  afterEvaluate necessary as java-gradle-plugin adds marker publication in afterEvaluate.
-// without this the marker POM is missing name & description, failing MavenCentral requirements.
-publishing.publications.withType<MavenPublication>()
-    .configureEach {
+// NOTE: _always_ use providers for name, description due to the use of afterEvaluate in the java-gradle-plugin
+publishing.publications.withType<MavenPublication>() {
 
         pluginManager.withPlugin("java-base") {
             versionMapping {

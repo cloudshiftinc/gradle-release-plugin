@@ -1,4 +1,4 @@
-package cloudshift.gradle.release.tasks
+package io.cloudshiftdev.gradle.release.tasks
 
 public abstract class CheckRemoteOutstandingCommits : AbstractCheckTask() {
     override val message: String = "local outstanding commits"

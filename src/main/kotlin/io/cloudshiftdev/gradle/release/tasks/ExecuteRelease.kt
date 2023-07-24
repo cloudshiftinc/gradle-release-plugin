@@ -1,6 +1,6 @@
-package cloudshift.gradle.release.tasks
+package io.cloudshiftdev.gradle.release.tasks
 
-import cloudshift.gradle.release.PreReleaseHookSpec
+import io.cloudshiftdev.gradle.release.PreReleaseHookSpec
 import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.nextPatch
 import io.github.z4kn4fein.semver.nextPreRelease
@@ -97,7 +97,13 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
                     )
                     workingDirectory.mkdirs()
                     try {
-                        hook.execute(PreReleaseHook.HookContext(versions.previousVersion, versions.version, workingDirectory = workingDirectory))
+                        hook.execute(
+                            PreReleaseHook.HookContext(
+                                versions.previousVersion,
+                                versions.version,
+                                workingDirectory = workingDirectory
+                            )
+                        )
                     } finally {
                         fs.delete {
                             delete(workingDirectory)

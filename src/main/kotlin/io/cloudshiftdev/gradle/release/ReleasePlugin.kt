@@ -1,13 +1,13 @@
 @file:Suppress("UnstableApiUsage")
 
-package cloudshift.gradle.release
+package io.cloudshiftdev.gradle.release
 
-import cloudshift.gradle.release.tasks.AbstractReleaseTask
-import cloudshift.gradle.release.tasks.CheckLocalOutstandingCommits
-import cloudshift.gradle.release.tasks.CheckLocalStagedFiles
-import cloudshift.gradle.release.tasks.CheckLocalUnstagedFiles
-import cloudshift.gradle.release.tasks.CheckRemoteOutstandingCommits
-import cloudshift.gradle.release.tasks.ExecuteRelease
+import io.cloudshiftdev.gradle.release.tasks.AbstractReleaseTask
+import io.cloudshiftdev.gradle.release.tasks.CheckLocalOutstandingCommits
+import io.cloudshiftdev.gradle.release.tasks.CheckLocalStagedFiles
+import io.cloudshiftdev.gradle.release.tasks.CheckLocalUnstagedFiles
+import io.cloudshiftdev.gradle.release.tasks.CheckRemoteOutstandingCommits
+import io.cloudshiftdev.gradle.release.tasks.ExecuteRelease
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task

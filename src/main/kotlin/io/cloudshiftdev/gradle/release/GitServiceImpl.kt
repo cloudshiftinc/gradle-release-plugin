@@ -1,6 +1,6 @@
-package cloudshift.gradle.release
+package io.cloudshiftdev.gradle.release
 
-import cloudshift.gradle.release.GitService.GitOutput
+import io.cloudshiftdev.gradle.release.GitService.GitOutput
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property

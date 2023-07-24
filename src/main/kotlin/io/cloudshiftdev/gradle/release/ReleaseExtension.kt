@@ -1,9 +1,9 @@
 @file:Suppress("KDocUnresolvedReference")
 
-package cloudshift.gradle.release
+package io.cloudshiftdev.gradle.release
 
-import cloudshift.gradle.release.hooks.PreProcessFilesHook
-import cloudshift.gradle.release.tasks.PreReleaseHook
+import io.cloudshiftdev.gradle.release.hooks.PreProcessFilesHook
+import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import org.gradle.api.Action
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
