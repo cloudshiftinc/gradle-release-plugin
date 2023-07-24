@@ -120,57 +120,36 @@ kotlin {
 //    }
 //}
 
-publishing.publications.withType<MavenPublication>().configureEach {
-/*
-name.set("gradle-release-plugin")
-                description.set("Gradle release/version management plugin")
-                url.set("https://github.com/cloudshiftinc/gradle-release-plugin")
-
+// ugh.  necessary as java-gradle-plugin adds marker publication in afterEvaluate.
+// without this the marker POM is missing name & description, failing MavenCentral requirements.
+afterEvaluate {
+    publishing.publications.withType<MavenPublication>()
+        .configureEach {
+            pom {
+                name = provider { project.name }
+                description = "Gradle release/version management plugin"
+                url = "https://github.com/cloudshiftinc/gradle-release-plugin"
                 licenses {
                     license {
-                        name.set("Apache License, version 2.0")
-                        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                        name = "Apache License, version 2.0"
+                        url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
                     }
                 }
 
                 scm {
-                    connection.set("scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/")
-                    developerConnection.set("scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git")
-                    url.set("https://github.com/cloudshiftinc/gradle-release-plugin")
+                    connection = "scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/"
+                    developerConnection = "scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git"
+                    url = "https://github.com/cloudshiftinc/gradle-release-plugin"
                 }
 
                 developers {
                     developer {
-                        id.set("cloudshiftchris")
-                        name.set("Chris Lee")
-                        email.set("chris@cloudshiftconsulting.com")
+                        name = "Chris Lee"
+                        email = "chris@cloudshiftconsulting.com"
                     }
                 }
- */
-    pom {
-        name = "gradle-release-plugin"
-        description = "Gradle release/version management plugin"
-        url = "https://github.com/cloudshiftinc/gradle-release-plugin"
-        licenses {
-            license {
-                name = "Apache License, version 2.0"
-                url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
             }
         }
-
-        scm {
-            connection = "scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/"
-            developerConnection = "scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git"
-            url = "https://github.com/cloudshiftinc/gradle-release-plugin"
-        }
-
-        developers {
-            developer {
-                name = "Chris Lee"
-                email = "chris@cloudshiftconsulting.com"
-            }
-        }
-    }
 }
 
 signing {
