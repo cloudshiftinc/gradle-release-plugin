@@ -3,6 +3,7 @@ package io.cloudshiftdev.gradle.release
 import io.cloudshiftdev.gradle.release.GitService.GitOutput
 import org.gradle.api.GradleException
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
@@ -19,6 +20,9 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
 
     internal interface Params : BuildServiceParameters {
         val releaseBranchPattern: Property<String>
+        val commitOptions: ListProperty<String>
+        val pushOptions: ListProperty<String>
+        val signTag: Property<Boolean>
     }
 
     private object GitCommands {
@@ -39,16 +43,29 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
     }
 
     init {
+        val gitVersion = git("version")
+        logger.info("Git version: ${gitVersion.output}")
+        verifyGitRepoExists()
         verifyReleaseBranch()
+    }
+
+    private fun verifyGitRepoExists() {
+        git("rev-parse", "--git-dir")
+        val hasCommitsOutput = git("rev-list", "-n", "1", "--all")
+        if (hasCommitsOutput.output.isBlank()) error("Git repository is empty; please commit something first")
     }
 
     private fun verifyReleaseBranch() {
         val cmdResult = git(GitCommands.CurrentBranch)
-        if (cmdResult.output.isBlank()) error("Not currently on a branch")
+        val currentBranch = cmdResult.output.replace("\n", "")
+            .replace("\r", "")
+            .trim()
+        if (currentBranch.isBlank()) error("Not currently on a branch")
+        logger.info("Currently on branch ${cmdResult.output}")
         val patternStr = parameters.releaseBranchPattern.get()
         if (patternStr.isBlank()) return
         val pattern = Regex(patternStr)
-        pattern.matchEntire(cmdResult.output) ?: error("Currently on branch ${cmdResult.output}; required branches for release: $patternStr")
+        pattern.matchEntire(currentBranch) ?: error("Currently on branch ${currentBranch}; required branches for release: $patternStr")
     }
 
     override fun localUnstagedFiles(): GitOutput = git(GitCommands.LocalUnstagedFiles)
@@ -64,11 +81,13 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
     }
 
     override fun commit(commitMessage: String) {
-        git("commit", "-m", commitMessage)
+        val args = listOf("commit", "-m", commitMessage) + parameters.commitOptions.get()
+        git(args)
     }
 
     override fun push() {
-        git("push", "--porcelain")
+        val args = listOf("push", "--porcelain") + parameters.pushOptions.get()
+        git(args)
     }
 
     private fun git(vararg args: String, block: (GitDsl).() -> Unit = {}) = git(args.toList(), block)
@@ -106,9 +125,9 @@ constructor(private val execOps: ExecOperations) : BuildService<GitServiceImpl.P
         }
     }
 
-    override fun tag(tagName: String, tagMessage: String, signTag: Boolean) {
+    override fun tag(tagName: String, tagMessage: String) {
         val args = mutableListOf("tag", "-a", tagName, "-m", tagMessage)
-        if (signTag) args.add("-s")
+        if (parameters.signTag.get()) args.add("-s")
         git(args)
     }
 

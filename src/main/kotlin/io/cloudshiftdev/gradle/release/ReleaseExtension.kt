@@ -133,7 +133,11 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
      * [ObjectFactory.newInstance].
      */
     public fun <T : PreReleaseHook> preReleaseHook(type: KClass<T>, vararg parameters: Any) {
-        preReleaseHooks.add(PreReleaseHookSpec(klass = type, parameters))
+        preReleaseHooks.add(PreReleaseHookSpec(clazz = type.java, parameters))
+    }
+
+    public fun <T : PreReleaseHook> preReleaseHook(type: Class<T>, vararg parameters: Any) {
+        preReleaseHooks.add(PreReleaseHookSpec(clazz = type, parameters))
     }
 
     public val git: Git = objects.newInstance<Git>()
@@ -157,10 +161,24 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
          * Default: **main**
          */
         public abstract val releaseBranchPattern : Property<String>
+
+        /**
+         * List of options to use during a commit, e.g. '-s'
+         *
+         * Default: **<empty>**
+         */
+        public abstract val commitOptions : ListProperty<String>
+
+        /**
+         * List of options to use during a push, e.g. '--no-verify'
+         *
+         * Default: **<empty>**
+         */
+        public abstract val pushOptions : ListProperty<String>
     }
 }
 
-internal class PreReleaseHookSpec<T : PreReleaseHook>(val klass: KClass<T>, val parameters: Array<out Any>)
+internal class PreReleaseHookSpec<T : PreReleaseHook>(val clazz: Class<T>, val parameters: Array<out Any>)
 
 /**
  * Adds a pre-release hook for processing files, either via templates or in-line token replacements.

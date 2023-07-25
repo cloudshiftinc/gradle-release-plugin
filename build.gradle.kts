@@ -6,12 +6,14 @@ plugins {
     signing
 }
 
+val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
+
 gradlePlugin {
     website = "https://github.com/cloudshiftinc/gradle-release-plugin"
     vcsUrl = "https://github.com/cloudshiftinc/gradle-release-plugin"
     plugins {
         create("cloudshiftRelease") {
-            id = "io.cloudshiftdev.release-plugin"
+            id = "io.cloudshiftdev.release"
             implementationClass = "io.cloudshiftdev.gradle.release.ReleasePlugin"
             displayName = "Gradle Release Plugin"
             description = project.description
@@ -56,6 +58,28 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
     ktlint("com.pinterest:ktlint:0.50.0")
+
+    // testing libraries
+   // testImplementation(gradleTestKit())
+
+    testImplementation(platform(libs.junit.bom))
+    testRuntimeOnly(platform(libs.junit.bom))
+    testRuntimeOnly(libs.junit.jupiter.engine)
+
+    testImplementation(platform(libs.kotest.bom))
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.assertions.json)
+    testImplementation(libs.kotest.framework.datatest)
+    testImplementation(libs.kotest.property)
+    testImplementation(libs.kotest.runner.junit5)
+
+    testImplementation(libs.jetbrains.kotlinx.datetime)
+
+
+}
+
+tasks.named<Test>("test") {
+    useJUnitPlatform()
 }
 
 val ktlintFormat = tasks.register<JavaExec>("ktlintFormat") {
@@ -78,7 +102,7 @@ tasks.withType<AbstractArchiveTask>()
 kotlin {
     explicitApi()
     jvmToolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(8)
     }
 }
 
@@ -146,12 +170,12 @@ publishing.publications.withType<MavenPublication>() {
     }
 */
 
-
 signing {
     val signingKey: String? by project
     val signingPassword: String? by project
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign(publishing.publications)
+    isRequired = !isSnapshot
 }
 
 val publishingPredicate =
@@ -169,7 +193,7 @@ val publishingPredicate =
         val eventName = System.getenv()["GITHUB_EVENT_NAME"]
         val refName = System.getenv()["GITHUB_REF_NAME"]
 
-        val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
+
         when {
             !ci || isSnapshot-> false
             eventName == "push" && refName == "main" -> true

@@ -14,16 +14,12 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.newInstance
 import java.util.UUID
 import javax.inject.Inject
 
 public abstract class ExecuteRelease
 @Inject
 constructor(private val objects: ObjectFactory, private val fs: FileSystemOperations) : AbstractReleaseTask() {
-    @get:Internal
-    internal abstract val signTag: Property<Boolean>
-
     @get:Internal
     internal abstract val preReleaseHooks: ListProperty<PreReleaseHookSpec<*>>
 
@@ -68,7 +64,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
         // tag with incremented version
         val versionTag = versionTagTemplate.get()
             .replace("\$version", versions.version.toString())
-        git.tag(versionTag, "${versionTagCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}", signTag.get())
+        git.tag(versionTag, "${versionTagCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}")
 
         // push everything; this finalizes the release
         git.push()
@@ -90,7 +86,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
         try {
             preReleaseHooks.get()
                 .forEach {
-                    val hook = objects.newInstance(it.klass, *it.parameters)
+                    val hook = objects.newInstance(it.clazz, *it.parameters)
                     val workingDirectory = temporaryDir.resolve(
                         UUID.randomUUID()
                             .toString()

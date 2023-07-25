@@ -10,7 +10,7 @@ internal interface GitService {
     fun addUnstagedFiles()
     fun commit(commitMessage: String)
     fun push()
-    fun tag(tagName: String, tagMessage: String, get: Boolean)
+    fun tag(tagName: String, tagMessage: String)
     fun restore(file: File)
 
     data class GitOutput(val output: String) {
