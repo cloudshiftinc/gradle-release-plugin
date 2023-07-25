@@ -125,7 +125,7 @@ fun GradleRunner.releasePluginConfiguration() {
     withArguments("release", "--info", "--stacktrace")
 }
 
-val ReleasePluginId = "id(\"io.cloudshiftdev.release-plugin\")"
+val ReleasePluginId = "id(\"io.cloudshiftdev.release\")"
 
 fun createGitRepository(dir : File ) {
     val result = ProcessBuilder("git", "init")
