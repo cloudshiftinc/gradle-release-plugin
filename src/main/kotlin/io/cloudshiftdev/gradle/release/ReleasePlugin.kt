@@ -8,9 +8,12 @@ import io.cloudshiftdev.gradle.release.tasks.CheckLocalStagedFiles
 import io.cloudshiftdev.gradle.release.tasks.CheckLocalUnstagedFiles
 import io.cloudshiftdev.gradle.release.tasks.CheckRemoteOutstandingCommits
 import io.cloudshiftdev.gradle.release.tasks.ExecuteRelease
+import io.cloudshiftdev.gradle.release.util.releasePluginError
+import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getValue
@@ -23,10 +26,9 @@ import org.gradle.util.GradleVersion
 
 public abstract class ReleasePlugin : Plugin<Project> {
 
-    override fun apply(project: Project) : Unit = project.run {
+    override fun apply(project: Project): Unit = project.run {
 
-        val minimumGradleVersion = "8.0"
-        require(GradleVersion.current() >= GradleVersion.version(minimumGradleVersion) ) { "A minimum of Gradle $minimumGradleVersion is required for the CloudShift Gradle Release Plugin"}
+        checkPlatformCompatibility()
 
         val releaseExtension = createReleaseExtension()
 
@@ -40,10 +42,11 @@ public abstract class ReleasePlugin : Plugin<Project> {
         }
 
         // configure all release tasks (this catches tasks added later)
-        tasks.withType<AbstractReleaseTask>().configureEach {
-            gitService = gitServiceProvider
-            group = "release"
-        }
+        tasks.withType<AbstractReleaseTask>()
+            .configureEach {
+                gitService = gitServiceProvider
+                group = "release"
+            }
 
         val checkRelease by tasks.registering
 
@@ -136,3 +139,44 @@ public abstract class ReleasePlugin : Plugin<Project> {
         return releaseExtension
     }
 }
+
+
+internal fun checkPlatformCompatibility() {
+
+    val supportedVersions = listOf(
+//        SupportedGradleVersion(gradleVersion = GradleVersion.version("6.9"), javaVersionRange = 8..15),
+//        SupportedGradleVersion(gradleVersion = GradleVersion.version("7.6"), javaVersionRange = 8..19),
+        GradleSupportSpec(gradleVersion = GradleVersion.version("8.0"), javaVersionRange = 8..19),
+        GradleSupportSpec(gradleVersion = GradleVersion.version("8.1"), javaVersionRange = 8..19),
+        GradleSupportSpec(gradleVersion = GradleVersion.version("8.2"), javaVersionRange = 8..19)
+    ).sortedBy { it.gradleVersion }
+
+    val gradleVersion = GradleVersion.current()
+
+    val gradleSupportSpec = supportedVersions.firstOrNull() {
+        gradleVersion.version.startsWith(it.gradleVersion.version)
+    }
+
+    when (gradleSupportSpec) {
+        // not a supported Gradle version; see if it is a newer or older version
+        null -> {
+            val lastSupportedVersion = supportedVersions.last()
+            when {
+                // if a newer version of Gradle than what we support, warn
+                gradleVersion > lastSupportedVersion.gradleVersion -> {
+                    val logger = Logging.getLogger("releasePluginPlatformSupport")
+                    logger.warn("[plugin:io.cloudshiftdev.release] Gradle $gradleVersion is not formally supported by this version of the plugin")
+                }
+                else -> releasePluginError("Gradle $gradleVersion not supported")
+            }
+        }
+        else -> {
+            val javaVersion = JavaVersion.current().majorVersion.toInt()
+            if (javaVersion !in gradleSupportSpec.javaVersionRange) {
+                releasePluginError("Java $javaVersion is not supported for this Gradle version (supported Java versions are ${gradleSupportSpec.javaVersionRange}")
+            }
+        }
+    }
+}
+
+private data class GradleSupportSpec(val gradleVersion: GradleVersion, val javaVersionRange: IntRange)
