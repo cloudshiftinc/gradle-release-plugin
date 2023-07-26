@@ -33,4 +33,6 @@ kotest-extensions-spring = { module = "io.kotest.extensions:kotest-extensions-sp
 guava = { module = "com.google.guava:guava", version = "32.1.1-jre" }
 semver = { module = "io.github.z4kn4fein:semver", version = "1.4.2" }
 
+jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version = "6.6.0.202305301015-r" }
+
 jetbrains-kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.4.0" }

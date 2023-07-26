@@ -57,11 +57,12 @@ val ktlint: Configuration by configurations.creating
 dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
+
+
+
     ktlint("com.pinterest:ktlint:0.50.0")
 
     // testing libraries
-   // testImplementation(gradleTestKit())
-
     testImplementation(platform(libs.junit.bom))
     testRuntimeOnly(platform(libs.junit.bom))
     testRuntimeOnly(libs.junit.jupiter.engine)
@@ -74,8 +75,7 @@ dependencies {
     testImplementation(libs.kotest.runner.junit5)
 
     testImplementation(libs.jetbrains.kotlinx.datetime)
-
-
+    testImplementation(libs.jgit)
 }
 
 tasks.named<Test>("test") {
@@ -102,7 +102,7 @@ tasks.withType<AbstractArchiveTask>()
 kotlin {
     explicitApi()
     jvmToolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(11)
     }
 }
 

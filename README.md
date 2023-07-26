@@ -23,14 +23,14 @@ plugins {
 
 The plugin is currently compatible with:
 
-| Plugin version | Gradle version                                                      |  
-| --- |---------------------------------------------------------------------|
-| < 1.0 | 8.0.x (Java 8 - 19)<br/>8.1.x (Java 8 - 19)<br/>8.2.x (Java 8 - 19) |
+| Plugin version | Gradle version |  
+| --- |------------------------------------------------------------------------|
+| < 1.0 | 8.0.x (Java 11 - 19)<br/>8.1.x (Java 11 - 19)<br/>8.2.x (Java 11 - 19) |
 
-(*) Java versions are constrained by what [Gradle](https://docs.gradle.org/current/userguide/compatibility.html#java) supports running on.
+*See the [Gradle Compatibility Matrix](https://docs.gradle.org/current/userguide/compatibility.html#java) for what Java versions are supported for running Gradle (note: the Java version
+used to run Gradle is different than Toolchain version, if any).*
 
-
-*As our plugin test platform matures we may consider extending compatibility to
+*As this plugin's test platform matures we may consider extending compatibility to
 older Gradle versions*
 
 # Usage
@@ -45,20 +45,6 @@ Configuration is via the `release` extension installed by the plugin:
 
 ```kotlin
 release {
-    checks {
-        // whether to fail the release if there are unstaged files
-        failOnUnstagedFiles = true
-        
-        // whether to fail the release if there are staged files
-        failOnStagedFiles = true
-        
-        // whether to fail the release if there are commits to be pushed
-        failOnPushNeeded = true
-        
-        // whether to fail the release if there are commits to be pulled
-        failOnPullNeeded = true
-    }
-    
     versionProperties {
         // properties file where the version property resides
         propertiesFile = file("gradle.properties")
@@ -79,6 +65,18 @@ release {
         
         // list of options used for git push, e.g. '--no-verify'
         pushOptions = emptyList()
+
+        // whether to fail the release if there are unstaged files
+        failOnUnstagedFiles = true
+
+        // whether to fail the release if there are staged files
+        failOnStagedFiles = true
+
+        // whether to fail the release if there are commits to be pushed
+        failOnPushNeeded = true
+
+        // whether to fail the release if there are commits to be pulled
+        failOnPullNeeded = true
     }
     
     // template for release commit message
@@ -102,8 +100,9 @@ release {
         // copy templates from a master location, expanding version references and other properties
         templates("gradle/templates", ".") {
             
-            // whether to prevent tampering of generated content by creating & checking sha256 fingerprint
-            preventTamplering = true
+            // whether to allow tampering of generated content
+            // generated content is protected by creating & checking sha256 fingerprint
+            allowTampering()
             
             // patterns to include
             includes("**/*")
@@ -120,7 +119,6 @@ release {
     
     // custom pre-release hook
     preReleaseHook<HookClass>()
-    
 }
 ```
 

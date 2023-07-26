@@ -52,45 +52,6 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
 
     internal abstract val preReleaseHooks: ListProperty<PreReleaseHookSpec<*>>
 
-    internal val checks: Checks = objects.newInstance<Checks>()
-
-    /**
-     * Configure pre-release checks
-     */
-    public fun checks(action: Action<Checks>) {
-        action.execute(checks)
-    }
-
-    public abstract class Checks {
-        /**
-         * Whether to fail the release if there are unstaged files.
-         *
-         * Default: **true**
-         */
-        public abstract val failOnUnstagedFiles: Property<Boolean>
-
-        /**
-         * Whether to fail the release if there are staged files.
-         *
-         * Default: **true**
-         */
-        public abstract val failOnStagedFiles: Property<Boolean>
-
-        /**
-         * Whether to fail the release if there are commits to be pushed.
-         *
-         * Default: **true**
-         */
-        public abstract val failOnPushNeeded: Property<Boolean>
-
-        /**
-         * Whether to fail the release if there are commits to be pulled.
-         *
-         * Default: **true**
-         */
-        public abstract val failOnPullNeeded: Property<Boolean>
-    }
-
     internal val versionProperties = objects.newInstance<VersionProperties>()
 
     /**
@@ -175,6 +136,34 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
          * Default: **<empty>**
          */
         public abstract val pushOptions : ListProperty<String>
+
+        /**
+         * Whether to fail the release if there are untracked (unstaged) files.
+         *
+         * Default: **true**
+         */
+        public abstract val failOnUntrackedFiles: Property<Boolean>
+
+        /**
+         * Whether to fail the release if there are uncommitted (staged) files.
+         *
+         * Default: **true**
+         */
+        public abstract val failOnUncommittedFiles: Property<Boolean>
+
+        /**
+         * Whether to fail the release if there are commits to be pushed.
+         *
+         * Default: **true**
+         */
+        public abstract val failOnPushNeeded: Property<Boolean>
+
+        /**
+         * Whether to fail the release if there are commits to be pulled.
+         *
+         * Default: **true**
+         */
+        public abstract val failOnPullNeeded: Property<Boolean>
     }
 }
 
@@ -238,14 +227,14 @@ public class PreProcessFilesDsl {
             excludes.addAll(pattern)
         }
 
-//        /**
-//         * By default, files generated from templates will fail the build if they have been tampered with.
-//         *
-//         * Call `allowTampering` to disable this check.
-//         */
-//        fun allowTampering() {
-//            preventTampering = false
-//        }
+        /**
+         * By default, files generated from templates will fail the build if they have been tampered with.
+         *
+         * Call `allowTampering` to disable this check.
+         */
+        public fun allowTampering() {
+            preventTampering = false
+        }
 
         internal fun build(): PreProcessFilesHook.TemplateSpec {
             return PreProcessFilesHook.TemplateSpec(

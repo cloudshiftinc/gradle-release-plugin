@@ -2,64 +2,43 @@ package io.cloudshiftdev.gradle.release
 
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.engine.spec.tempdir
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
-import org.gradle.testkit.runner.TaskOutcome
 
 class BasicRepositoryTests : FunSpec() {
     init {
         test("build fails with no git repository") {
-            val runner = gradleTestEnvironment({ tempdir() }) {
-                gradleBuild {
-                    script = """
-                        plugins {
-                          $ReleasePluginId
-                        }
-                    """.trimIndent()
-                }
-
-                testKitRunner {
-                    releasePluginConfiguration()
-                }
+            val testEnvironment = gradleTestEnvironment {
+                baseReleasePluginConfiguration()
             }
 
-            val output = runner.run()
+            val buildResult = testEnvironment.runner.run()
 
-            // expecting all tasks to have failed as repo does not exist
-            withClue(output.output) {
-                output.tasks.all { it.outcome == TaskOutcome.FAILED }
-                    .shouldBe(true)
-                output.output.shouldContain("not a git repository")
+
+
+            withClue(buildResult.output) {
+                // expecting failure as repository doesn't exit
+                buildResult.failed().shouldBe(true)
+                buildResult.output.shouldContain("Git repository not found")
             }
         }
 
         test("build fails with empty git repository") {
-            val runner = gradleTestEnvironment({ tempdir() }) {
-                gradleBuild {
-                    script = """
-                        plugins {
-                          $ReleasePluginId
-                        }
-                    """.trimIndent()
-                }
+            val testEnvironment = gradleTestEnvironment {
+                baseReleasePluginConfiguration()
 
-                testKitRunner {
-                    releasePluginConfiguration()
-                }
-
-                withWorkingDir {
-                    createGitRepository(it)
-                }
+                // create empty repository
+                gitRepository {}
             }
 
-            val output = runner.run()
+            val buildResult = testEnvironment.runner.run()
 
             // expecting failure
-            withClue(output.output) {
-                output.tasks.all { it.outcome == TaskOutcome.FAILED }
-                    .shouldBe(true)
-                output.output.shouldContain("Git repository is empty; please commit something first")
+            withClue(buildResult.output) {
+                // expecting failure as repository is empty
+                buildResult.failed().shouldBe(true)
+
+                buildResult.output.shouldContain("Git repository is empty; please commit something first")
             }
         }
     }

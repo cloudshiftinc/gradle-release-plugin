@@ -46,12 +46,15 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
 
     @TaskAction
     public fun action() {
+        val git = gitRepository.get()
+
+        git.checkCommitNeeded()
+        git.checkUpdatedNeeded()
+
         val versions = incrementVersion {
             // TODO - configuration for which to increment
             it.nextPatch()
         }
-
-        val git = gitService.get()
 
         executePreReleaseHooks(versions)
 
@@ -109,7 +112,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
         } catch (t: Throwable) {
             // rollback version change if any exceptions from pre-release hooks
             logger.warn("Rolling back changes to ${versionPropertiesFile.get()} on exception")
-            gitService.get()
+            gitRepository.get()
                 .restore(versionPropertiesFile.get().asFile)
             throw t
         }
@@ -126,7 +129,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
                 if (pieces[0].trim() != versionPropertyName.get()) return@mapNotNull null
                 pieces[1].toVersion()
             }
-            .firstOrNull() ?: releaseError("Unable to resolve version property '${versionPropertyName.get()} in ${versionPropertiesFile.get()}")
+            .firstOrNull() ?: releaseError("Unable to resolve version property '${versionPropertyName.get()}' in ${versionPropertiesFile.get()}")
 
         val nextVersion = versionIncrementer(currentVersion)
 

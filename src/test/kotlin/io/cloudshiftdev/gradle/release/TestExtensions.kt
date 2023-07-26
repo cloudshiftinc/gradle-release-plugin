@@ -1,23 +1,45 @@
 package io.cloudshiftdev.gradle.release
 
+import io.cloudshiftdev.gradle.release.jgit.commit
+import io.kotest.core.TestConfiguration
+import io.kotest.engine.spec.tempdir
 import kotlinx.datetime.Clock
+import org.eclipse.jgit.api.Git
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 
 
-fun gradleTestEnvironment(tempDirFactory: () -> File, block: (TestEnvironmentDsl).() -> Unit): GradleRunner {
+fun TestConfiguration.gradleTestEnvironment(block: (TestEnvironmentDsl).() -> Unit): TestEnvironment {
     val model = TestEnvironmentDsl()
     model.apply(block)
 
-    val workingDir = tempDirFactory()
+    val workingDir = tempdir("test-repo")
+
+    val git = createGitRepository(workingDir, tempdir("upstream-repo"))
+    autoClose(git)
+    val ctx = GitContext(workingDir, git)
+
+    writeGitIgnore(workingDir)
     writeGradleProperties(workingDir, model.gradleProperties.properties)
     writeGradleSettings(workingDir, model.gradleSettings)
     writeGradleBuild(workingDir, model.gradleBuild)
-    model.workingDirCallback?.let { it(workingDir) }
 
-    val testKitDir = tempDirFactory()
-    val runner = model.gradleRunner
-    return runner.withProjectDir(workingDir).withTestKitDir(testKitDir)
+    ctx.stageAndCommit("Build setup")
+    ctx.git.push().call()
+    model.gitSpecBlock?.invoke(ctx)
+
+    val testKitDir = tempdir("testkit")
+    val runner = model.gradleRunner.withProjectDir(workingDir)
+        .withTestKitDir(testKitDir)
+    return TestEnvironment(runner = runner, git = ctx.git, workingDir = workingDir)
+}
+
+
+fun writeGitIgnore(workingDir: File) {
+    val gitIgnoreFile = workingDir.resolve(".gitignore")
+    val toIgnore = listOf(".gradle/", "build/")
+    gitIgnoreFile.writeText(toIgnore.joinToString("\n"))
 }
 
 private fun writeGradleBuild(workingDir: File, gradleBuild: GradleBuild) {
@@ -35,6 +57,8 @@ private fun writeGradleSettings(workingDir: File, gradleSettings: GradleSettings
     val text = lines.joinToString(separator = "\n") + "\n" + (gradleSettings.script ?: "")
     gradleSettingsFile.writeText(text)
 }
+
+data class TestEnvironment(val runner: GradleRunner, val git: Git, val workingDir: File)
 
 fun dumpDir(workingDir: File): String {
     return workingDir.walkTopDown()
@@ -59,11 +83,12 @@ private fun writeGradleProperties(workingDir: File, properties: Map<String, Stri
 }
 
 class TestEnvironmentDsl {
+    var gitSpecBlock: ((GitContext) -> Unit)? = null
     val gradleProperties = GradleProperties()
     val gradleSettings = GradleSettings()
     val gradleBuild = GradleBuild()
     val gradleRunner = GradleRunner.create()!!
-    var workingDirCallback : ((File) -> Unit)? = null
+
     fun gradleProperties(block: (GradleProperties).() -> Unit) {
         gradleProperties.apply(block)
     }
@@ -80,8 +105,23 @@ class TestEnvironmentDsl {
         gradleRunner.apply(block)
     }
 
-    fun withWorkingDir(block : (File) -> Unit) {
-        workingDirCallback = block
+    fun gitRepository(block: (GitContext) -> Unit) {
+        gitSpecBlock = block
+    }
+}
+
+
+fun TestEnvironmentDsl.baseReleasePluginConfiguration() {
+    gradleBuild {
+        script = """
+                    plugins {
+                      $ReleasePluginId
+                    }
+                """.trimIndent()
+    }
+
+    testKitRunner {
+        releasePluginConfiguration()
     }
 }
 
@@ -122,18 +162,76 @@ class GradleBuild {
 
 fun GradleRunner.releasePluginConfiguration() {
     withPluginClasspath()
+    withDebug(true)
     withArguments("release", "--info", "--stacktrace")
 }
 
-val ReleasePluginId = "id(\"io.cloudshiftdev.release\")"
+val ReleasePluginId = "id(\"${PluginSpec.Id}\")"
 
-fun createGitRepository(dir : File ) {
-    val result = ProcessBuilder("git", "init")
-        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
-        .redirectError(ProcessBuilder.Redirect.INHERIT)
-        .directory(dir)
-        .start()
-        .waitFor()
+fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
+    val upstreamUrl = upstreamRepositoryDir.toURI().toURL().toString().replace("file:/", "file:///")
 
-    if(result != 0) error("Unable to create git repository")
+    // create an upstream repo
+    createUpstreamRepo(upstreamRepositoryDir)
+    val git = Git.cloneRepository()
+        .setURI(upstreamUrl)
+        .setDirectory(dir)
+        .call()
+    println("CONFIG: ${dir.resolve(".git/config").readText()}")
+
+    return git
 }
+
+private fun createUpstreamRepo(upstreamRepositoryDir: File) {
+    Git.init().setDirectory(upstreamRepositoryDir).call().use { git ->
+        upstreamRepositoryDir.resolve(".gitinit")
+        git.add().addFilepattern(".").call()
+        git.commit().setMessage("Initial commit").call()
+    }
+}
+
+fun BuildResult.failed() = output.lines().any { it.startsWith("BUILD FAILED in") }
+
+class TestFilesDsl {
+    val files = mutableListOf<String>()
+    fun files(vararg files: String) {
+        this.files.addAll(files.toList())
+    }
+}
+
+class SampleCommitDsl {
+    val files = mutableListOf<String>()
+    fun files(vararg files: String) {
+        this.files.addAll(files.toList())
+    }
+}
+
+fun GitContext.testFiles(block: (TestFilesDsl).() -> Unit) {
+    val dsl = TestFilesDsl()
+    dsl.apply(block)
+    dsl.files.forEach {
+        val relativeComponent = when {
+            it.startsWith("/") || it.startsWith("\\") -> it.drop(1)
+            else -> it
+        }
+        val toCreate = workingDir.resolve(relativeComponent)
+        println("Test file: $relativeComponent")
+        toCreate.writeText("Test Data")
+    }
+}
+
+fun GitContext.stageAndCommit(message: String) {
+    stageFiles()
+    println("Sample commit: $message")
+    git.commit {
+        message(message)
+    }
+}
+
+data class GitContext(val workingDir: File, val git: Git) {
+    fun stageFiles() {
+        git.add().addFilepattern(".").call()
+    }
+}
+
+
