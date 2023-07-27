@@ -34,16 +34,19 @@ jobs:
     - 'check_yaml_consistency'
     steps:
     - id: 'step-0'
+      name: 'Setup Git Default Branch'
+      run: 'git config --global init.defaultBranch main'
+    - id: 'step-1'
       name: 'Checkout'
       uses: 'actions/checkout@v3'
-    - id: 'step-1'
+    - id: 'step-2'
       name: 'Set up JDK'
       uses: 'actions/setup-java@v3'
       with:
         java-version: '17'
         distribution: 'temurin'
         check-latest: 'true'
-    - id: 'step-2'
+    - id: 'step-3'
       name: 'Build'
       uses: 'gradle/gradle-build-action@v2'
       with:

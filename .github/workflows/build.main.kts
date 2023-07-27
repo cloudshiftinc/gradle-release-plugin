@@ -27,6 +27,7 @@ workflow(
     )
 ) {
     job(id = "build", runsOn = RunnerType.UbuntuLatest) {
+        run(name = "Setup Git Default Branch", command = "git config --global init.defaultBranch main")
         uses(name = "Checkout", action = CheckoutV3())
         uses(
             name = "Set up JDK", action = SetupJavaV3(
