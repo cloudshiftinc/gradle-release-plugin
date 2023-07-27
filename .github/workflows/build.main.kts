@@ -27,7 +27,8 @@ workflow(
     )
 ) {
     job(id = "build", runsOn = RunnerType.UbuntuLatest) {
-        uses(name = "checkout", action = CheckoutV3())
+        run(name = "Setup Git", command = "git config --global init.defaultBranch main")
+        uses(name = "Checkout", action = CheckoutV3())
         uses(
             name = "Set up JDK", action = SetupJavaV3(
                 javaVersion = "17",
@@ -36,7 +37,7 @@ workflow(
             )
         )
         uses(
-            name = "build", action = GradleBuildActionV2(
+            name = "Build", action = GradleBuildActionV2(
                 gradleVersion = "wrapper",
                 gradleHomeCacheCleanup = true,
                 gradleHomeCacheIncludes = listOf("jdks", "caches", "notifications"),
