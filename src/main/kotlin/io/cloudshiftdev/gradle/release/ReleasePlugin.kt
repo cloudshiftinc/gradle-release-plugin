@@ -26,7 +26,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
 
         val releaseExtension = createReleaseExtension()
 
-        val gitRepositoryService = gradle.sharedServices.registerIfAbsent("${PluginSpec.Id}-${project.path}", GitRepositoryImpl::class) {
+        val gitRepositoryService = gradle.sharedServices.registerIfAbsent("${PluginSpec.Id}-${project.path}", GitRepository::class) {
 
             parameters {
                 projectDir.set(layout.projectDirectory)

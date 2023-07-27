@@ -305,7 +305,6 @@ fun TestEnvironment.execGit(vararg args : String) : ExecOutput {
     env.clear()
     env["GIT_TRACE"] = "1"
 
-    // builder.inheritIO()
     val process = builder.start()
     val br = BufferedReader(InputStreamReader(process.inputStream))
     var line: String?
