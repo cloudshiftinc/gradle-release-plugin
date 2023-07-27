@@ -10,11 +10,14 @@ class BasicRepositoryTests : FunSpec() {
         test("build fails with no git repository") {
             val testEnvironment = gradleTestEnvironment {
                 baseReleasePluginConfiguration()
+
+                // remove GIT repository entirely
+                setup {
+                    it.removeRepository()
+                }
             }
 
             val buildResult = testEnvironment.runner.run()
-
-
 
             withClue(buildResult.output) {
                 // expecting failure as repository doesn't exit
@@ -27,8 +30,11 @@ class BasicRepositoryTests : FunSpec() {
             val testEnvironment = gradleTestEnvironment {
                 baseReleasePluginConfiguration()
 
-                // create empty repository
-                gitRepository {}
+                // setup for empty repository
+                setup {
+                    it.removeRepository()
+                    it.createRepository()
+                }
             }
 
             val buildResult = testEnvironment.runner.run()

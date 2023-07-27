@@ -17,7 +17,6 @@ import java.io.File
 import javax.inject.Inject
 
 
-// https://github.com/centic9/jgit-cookbook
 internal abstract class GitRepositoryImpl
 @Inject
 constructor(private val execOps: ExecOperations) : BuildService<GitRepositoryImpl.Params>, GitRepository {
@@ -141,7 +140,7 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepositoryImp
         dsl.args.addAll(args)
         dsl.apply(block)
 
-        val commandLine = mutableListOf("/opt/homebrew/bin/git")
+        val commandLine = mutableListOf("git")
         commandLine.addAll(dsl.args)
 
         logger.info("Executing $commandLine")
