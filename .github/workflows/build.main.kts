@@ -27,7 +27,12 @@ workflow(
     )
 ) {
     job(id = "build", runsOn = RunnerType.UbuntuLatest) {
-        run(name = "Setup Git", command = "git config --global init.defaultBranch main")
+
+        // these are needed for the TestKit tests that create / manipulate repositories
+        run(name = "Setup Git Default Branch", command = "git config --global init.defaultBranch main")
+        run(name = "Setup Git user.email", command = "git config --global user.email you@example.com")
+        run(name = "Setup Git user.email", command = "git config --global user.name you")
+        
         uses(name = "Checkout", action = CheckoutV3())
         uses(
             name = "Set up JDK", action = SetupJavaV3(
