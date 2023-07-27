@@ -207,7 +207,6 @@ fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
 
 private fun configureRepo(git : Git) {
     val config = git.repository.config
-    config.setString(CONFIG_INIT_SECTION, null, "defaultBranch", "main")
     config.setString(CONFIG_USER_SECTION, null, "name", "Testing")
     config.setString(CONFIG_USER_SECTION, null, "email", "testing@example.com")
     config.save()
