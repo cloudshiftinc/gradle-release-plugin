@@ -1,22 +1,18 @@
-package io.cloudshiftdev.gradle.release
+package io.cloudshiftdev.gradle.release.fixture
 
-import io.cloudshiftdev.gradle.release.jgit.commit
+import io.cloudshiftdev.gradle.release.PluginSpec
 import io.kotest.core.TestConfiguration
 import io.kotest.engine.spec.tempdir
 import kotlinx.datetime.Clock
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.ConfigConstants.CONFIG_INIT_SECTION
 import org.eclipse.jgit.lib.ConfigConstants.CONFIG_USER_SECTION
-import org.gradle.api.GradleException
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
-import java.io.BufferedReader
+import org.gradle.util.GradleVersion
 import java.io.File
-import java.io.InputStreamReader
-import java.util.Properties
 
 
-fun TestConfiguration.gradleTestEnvironment(block: (TestEnvironmentDsl).() -> Unit): TestEnvironment {
+internal fun TestConfiguration.gradleTestEnvironment(block: (TestEnvironmentDsl).() -> Unit): TestEnvironment {
     val model = TestEnvironmentDsl()
     model.apply(block)
 
@@ -42,7 +38,7 @@ fun TestConfiguration.gradleTestEnvironment(block: (TestEnvironmentDsl).() -> Un
     return TestEnvironment(runner = runner, git = ctx.git, workingDir = workingDir)
 }
 
-fun writeGitIgnore(workingDir: File) {
+private fun writeGitIgnore(workingDir: File) {
     val gitIgnoreFile = workingDir.resolve(".gitignore")
     val toIgnore = listOf(".gradle/", "build/")
     gitIgnoreFile.writeText(toIgnore.joinToString("\n"))
@@ -64,20 +60,6 @@ private fun writeGradleSettings(workingDir: File, gradleSettings: GradleSettings
     gradleSettingsFile.writeText(text)
 }
 
-data class TestEnvironment(val runner: GradleRunner, val git: Git, val workingDir: File)
-
-fun dumpDir(workingDir: File): String {
-    return workingDir.walkTopDown()
-        .mapNotNull {
-            val relative = it.relativeTo(workingDir)
-            when {
-                it.isDirectory -> null
-                else -> relative.name
-            }
-        }
-        .joinToString(separator = "\n") { "    $it" }
-}
-
 private fun writeGradleProperties(workingDir: File, properties: Map<String, String>) {
     val gradlePropertiesFile = workingDir.resolve("gradle.properties")
     val propText = properties.map { "${it.key}=${it.value.replace("=", "\\=")}" }
@@ -88,7 +70,8 @@ private fun writeGradleProperties(workingDir: File, properties: Map<String, Stri
     gradlePropertiesFile.writeText(comment + propText)
 }
 
-class TestEnvironmentDsl {
+
+internal class TestEnvironmentDsl {
     var setupSpecBlock: ((TestEnvironmentContext) -> Unit)? = null
     val gradleProperties = GradleProperties()
     val gradleSettings = GradleSettings()
@@ -117,7 +100,7 @@ class TestEnvironmentDsl {
 }
 
 
-fun TestEnvironmentDsl.baseReleasePluginConfiguration() {
+internal fun TestEnvironmentDsl.baseReleasePluginConfiguration() {
     gradleBuild {
         script = """
                     plugins {
@@ -131,7 +114,7 @@ fun TestEnvironmentDsl.baseReleasePluginConfiguration() {
     }
 }
 
-class GradleProperties {
+internal class GradleProperties {
     val properties = mutableMapOf<String, String>()
 
     init {
@@ -142,10 +125,23 @@ class GradleProperties {
         "org.gradle.configureondemand" to "false"
         "org.gradle.daemon" to "true"
         "org.gradle.caching" to "true"
-        "org.gradle.configuration-cache" to "true"
         "org.gradle.kotlin.dsl.allWarningsAsErrors" to "true"
         "systemProp.file.encoding" to "UTF-8"
-        "org.gradle.java.installations.auto-detect" to "false"
+
+        if(GradleVersion.current() >= GradleVersion.version("7.6")) {
+            // toolchains introduced in 7.6
+            "org.gradle.java.installations.auto-detect" to "false"
+        }
+
+        if(GradleVersion.current() >= GradleVersion.version("8.0")) {
+            // configuration cache was incubating before 8.0; set it to 8.0 as it was reasonably mature by then
+            "org.gradle.unsafe.configuration-cache" to "true"
+        }
+
+        if(GradleVersion.current() >= GradleVersion.version("8.2")) {
+            // configuration cache became stable in 8.2
+            "org.gradle.configuration-cache" to "true"
+        }
     }
 
     infix fun String.to(other: String) {
@@ -153,28 +149,26 @@ class GradleProperties {
     }
 }
 
-class GradleSettings {
+internal class GradleSettings {
     var projectName = "test-project"
     val featurePreviews = mutableListOf("TYPESAFE_PROJECT_ACCESSORS")
     var script: String? = null
 }
 
-class GradleBuild {
-
+internal class GradleBuild {
     var script: String? = null
-
 }
 
 
-fun GradleRunner.releasePluginConfiguration() {
+internal fun GradleRunner.releasePluginConfiguration() {
     withPluginClasspath()
     withDebug(true)
     withArguments("release", "--info", "--stacktrace")
 }
 
-val ReleasePluginId = "id(\"${PluginSpec.Id}\")"
+private val ReleasePluginId = "id(\"${PluginSpec.Id}\")"
 
-fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
+private fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
     val upstreamUrl = upstreamRepositoryDir.toURI()
         .toURL()
         .toString()
@@ -197,13 +191,6 @@ fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
 
     return git
 }
-/*
-        // these are needed for the TestKit tests that create / manipulate repositories
-        run(name = "Setup Git Default Branch", command = "git config --global init.defaultBranch main")
-        run(name = "Setup Git user.email", command = "git config --global user.email you@example.com")
-        run(name = "Setup Git user.email", command = "git config --global user.name you")
-
- */
 
 private fun configureRepo(git : Git) {
     val config = git.repository.config
@@ -215,9 +202,11 @@ private fun configureRepo(git : Git) {
 private fun createUpstreamRepo(upstreamRepositoryDir: File) {
     Git.init()
         .setDirectory(upstreamRepositoryDir)
+        .setInitialBranch("main")
         .call()
         .use { git ->
             configureRepo(git)
+            // dummy file for initial commit
             upstreamRepositoryDir.resolve(".gitinit")
             git.add()
                 .addFilepattern(".")
@@ -245,7 +234,7 @@ class SampleCommitDsl {
     }
 }
 
-fun TestEnvironmentContext.testFiles(block: (TestFilesDsl).() -> Unit) {
+internal fun TestEnvironmentContext.testFiles(block: (TestFilesDsl).() -> Unit) {
     val dsl = TestFilesDsl()
     dsl.apply(block)
     dsl.files.forEach {
@@ -259,7 +248,7 @@ fun TestEnvironmentContext.testFiles(block: (TestFilesDsl).() -> Unit) {
     }
 }
 
-fun TestEnvironmentContext.stageAndCommit(message: String) {
+internal fun TestEnvironmentContext.stageAndCommit(message: String) {
     stageFiles()
     println("Sample commit: $message")
     git.commit {
@@ -267,7 +256,7 @@ fun TestEnvironmentContext.stageAndCommit(message: String) {
     }
 }
 
-data class TestEnvironmentContext(val workingDir: File, val git: Git) {
+internal data class TestEnvironmentContext(val workingDir: File, val git: Git) {
     fun stageFiles() {
         git.add()
             .addFilepattern(".")
@@ -287,74 +276,5 @@ data class TestEnvironmentContext(val workingDir: File, val git: Git) {
     }
 }
 
-fun TestEnvironment.gitLog(refSpec : String = "") : List<String> {
-    return execGit("log", "--oneline", "--no-color", refSpec).lines.map {
-        val pieces = it.split(" ", limit = 2)
-        when(pieces.size) {
-            2 -> pieces[1]
-            else -> error("Invalid git log output: '$it'")
-        }
-    }
-}
-
-fun TestEnvironment.unpushedCommits() : List<String> = gitLog("origin/main..HEAD")
-
-fun TestEnvironment.gitTags() : List<String> {
-    return execGit("tag").lines
-}
-
-fun TestEnvironment.currentVersion() : String {
-    return workingDir.resolve("gradle.properties").bufferedReader().use {
-        val props = Properties()
-
-        props.load(it)
-        props["version"] as String
-    }
-}
-
-fun TestEnvironment.execGit(vararg args : String) : ExecOutput {
-    val commandLine = mutableListOf("git")
-    commandLine.addAll(args.toList())
-
-    val builder = ProcessBuilder(commandLine.filter { it.isNotBlank() })
-    builder.directory(workingDir)
-
-    val env = builder.environment()
-
-    env.clear()
-    env["GIT_TRACE"] = "1"
-
-    val process = builder.start()
-    val br = BufferedReader(InputStreamReader(process.inputStream))
-    var line: String?
-    val sb = StringBuilder()
-    while (br.readLine()
-            .also { line = it } != null
-    ) sb.append(line + "\n")
-
-    val br2 = BufferedReader(InputStreamReader(process.errorStream))
-    var line2: String?
-    val sb2 = StringBuilder()
-    while (br2.readLine()
-            .also { line2 = it } != null
-    ) sb2.append(line2 + "\n")
-
-    return when (val exitCode = process.waitFor()) {
-        0 -> ExecOutput(sb.toString())
-        else -> {
-            val standardOutput = sb.toString()
-            val stdErr = sb2.toString()
-            var msg = "Error executing $commandLine; exit code $exitCode"
-            if (standardOutput.isNotBlank()) msg = "$msg\n$standardOutput"
-            if (stdErr.isNotBlank()) msg = "$msg\n$stdErr"
-
-            throw GradleException(msg)
-        }
-    }
-}
-
-data class ExecOutput(val output : String) {
-    val lines = output.lines().filter { it.isNotBlank() }
-}
 
 

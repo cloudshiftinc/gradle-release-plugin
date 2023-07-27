@@ -1,5 +1,8 @@
 package io.cloudshiftdev.gradle.release
 
+import io.cloudshiftdev.gradle.release.fixture.baseReleasePluginConfiguration
+import io.cloudshiftdev.gradle.release.fixture.failed
+import io.cloudshiftdev.gradle.release.fixture.gradleTestEnvironment
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

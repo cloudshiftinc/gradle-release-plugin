@@ -1,4 +1,4 @@
-package io.cloudshiftdev.gradle.release.jgit
+package io.cloudshiftdev.gradle.release.fixture
 
 import org.eclipse.jgit.api.CommitCommand
 import org.eclipse.jgit.api.Git
