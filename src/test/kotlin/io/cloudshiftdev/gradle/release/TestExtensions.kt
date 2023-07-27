@@ -5,6 +5,8 @@ import io.kotest.core.TestConfiguration
 import io.kotest.engine.spec.tempdir
 import kotlinx.datetime.Clock
 import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.ConfigConstants.CONFIG_INIT_SECTION
+import org.eclipse.jgit.lib.ConfigConstants.CONFIG_USER_SECTION
 import org.gradle.api.GradleException
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
@@ -184,6 +186,8 @@ fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
         .setURI(upstreamUrl)
         .setDirectory(dir)
         .call()
+
+    configureRepo(git)
     println(
         "CONFIG: ${
             dir.resolve(".git/config")
@@ -193,12 +197,28 @@ fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
 
     return git
 }
+/*
+        // these are needed for the TestKit tests that create / manipulate repositories
+        run(name = "Setup Git Default Branch", command = "git config --global init.defaultBranch main")
+        run(name = "Setup Git user.email", command = "git config --global user.email you@example.com")
+        run(name = "Setup Git user.email", command = "git config --global user.name you")
+
+ */
+
+private fun configureRepo(git : Git) {
+    val config = git.repository.config
+    config.setString(CONFIG_INIT_SECTION, null, "defaultBranch", "main")
+    config.setString(CONFIG_USER_SECTION, null, "name", "Testing")
+    config.setString(CONFIG_USER_SECTION, null, "email", "testing@example.com")
+    config.save()
+}
 
 private fun createUpstreamRepo(upstreamRepositoryDir: File) {
     Git.init()
         .setDirectory(upstreamRepositoryDir)
         .call()
         .use { git ->
+            configureRepo(git)
             upstreamRepositoryDir.resolve(".gitinit")
             git.add()
                 .addFilepattern(".")
