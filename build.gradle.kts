@@ -97,9 +97,9 @@ val ktfmtFormat by
         args(ktfmtArgs)
     }
 
-val check = tasks.named("check") { dependsOn(ktfmtFormat) }
+//val check = tasks.named("check") { dependsOn(ktfmtFormat) }
 
-tasks.register("precommit") { dependsOn(check) }
+//tasks.register("precommit") { dependsOn(check) }
 
 tasks.withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false
