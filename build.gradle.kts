@@ -4,6 +4,7 @@ plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
     signing
+//    id("io.cloudshiftdev.release") version "0.1.18"
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
@@ -54,13 +55,9 @@ tasks {
     //    }
 }
 
-val ktlint: Configuration by configurations.creating
-
 dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
-
-    ktlint("com.pinterest:ktlint:0.50.0")
 
     // testing libraries
     testImplementation(platform(libs.junit.bom))
@@ -102,10 +99,10 @@ tasks.register("precommit") {
     dependsOn(tasks.named("check"))
 }
 
-tasks.withType<AbstractArchiveTask>().configureEach {
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
-}
+//tasks.withType<AbstractArchiveTask>().configureEach {
+//    isPreserveFileTimestamps = false
+//    isReproducibleFileOrder = true
+//}
 
 kotlin {
     explicitApi()
