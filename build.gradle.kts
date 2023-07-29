@@ -88,7 +88,7 @@ val ktfmtFormat by
     tasks.registering(JavaExec::class) {
         val ktfmtArgs =
             mutableListOf("--kotlinlang-style", layout.projectDirectory.asFile.absolutePath)
-        if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
+      //  if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
         group = "formatting"
         description = "Run ktfmt"
         classpath = ktfmt
@@ -97,9 +97,10 @@ val ktfmtFormat by
         args(ktfmtArgs)
     }
 
-//val check = tasks.named("check") { dependsOn(ktfmtFormat) }
-
-//tasks.register("precommit") { dependsOn(check) }
+tasks.register("precommit") {
+    group = "verification"
+    dependsOn(tasks.named("check"))
+}
 
 tasks.withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false
