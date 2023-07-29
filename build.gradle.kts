@@ -3,8 +3,8 @@ import com.gradle.publish.PublishTask
 plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
-    signing
-//    id("io.cloudshiftdev.release") version "0.1.18"
+ //   signing
+    id("io.cloudshiftdev.release") version "0.1.18"
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
@@ -172,13 +172,13 @@ publishing.publications.withType<MavenPublication>() {
     }
 */
 
-signing {
-    val signingKey: String? by project
-    val signingPassword: String? by project
-    useInMemoryPgpKeys(signingKey, signingPassword)
-    sign(publishing.publications)
-    isRequired = !isSnapshot
-}
+//signing {
+//    val signingKey: String? by project
+//    val signingPassword: String? by project
+//    useInMemoryPgpKeys(signingKey, signingPassword)
+//    sign(publishing.publications)
+//    isRequired = !isSnapshot
+//}
 
 val publishingPredicate = provider {
     val ci = System.getenv()["CI"] == "true"
