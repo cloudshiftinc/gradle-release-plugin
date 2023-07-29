@@ -3,7 +3,7 @@ import com.gradle.publish.PublishTask
 plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
- //   signing
+    signing
 //    id("io.cloudshiftdev.release") version "0.1.19"
 }
 
@@ -99,86 +99,23 @@ tasks.register("precommit") {
     dependsOn(tasks.named("check"))
 }
 
-//tasks.withType<AbstractArchiveTask>().configureEach {
-//    isPreserveFileTimestamps = false
-//    isReproducibleFileOrder = true
-//}
+tasks.withType<AbstractArchiveTask>().configureEach {
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+}
 
 kotlin {
     explicitApi()
     jvmToolchain { languageVersion = JavaLanguageVersion.of(11) }
 }
 
-// val noLocalChanges = tasks.register<NoLocalChanges>("noLocalChanges") {
-//    group = LifecycleBasePlugin.VERIFICATION_GROUP
-//    onlyIf { System.getenv()["CI"] != null }
-//    dependsOn(ktlintFormat)
-// }
-
-// tasks.named("check") {
-//    dependsOn(noLocalChanges)
-// }
-//
-// release {
-//    checks {
-//        failOnPushNeeded = false
-//        failOnPullNeeded = false
-//        failOnStagedFiles = false
-//        failOnUnstagedFiles = false
-//    }
-//    preProcessFiles {
-//        templates(sourceDir = "gradle/templates", destinationDir = layout.projectDirectory)
-//        replacements {
-//            includes("README.MD")
-//        }
-//    }
-// }
-/*
-
-// NOTE: _always_ use providers for name, description due to the use of afterEvaluate in the java-gradle-plugin
-publishing.publications.withType<MavenPublication>() {
-
-        pluginManager.withPlugin("java-base") {
-            versionMapping {
-                usage("java-api") { fromResolutionOf("runtimeClasspath") }
-                usage("java-runtime") { fromResolutionResult() }
-            }
-        }
-
-        pom {
-            name = provider { project.name }
-            description = provider { project.description }
-            url = provider { "https://github.com/cloudshiftinc/gradle-release-plugin" }
-            licenses {
-                license {
-                    name = "Apache License, version 2.0"
-                    url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
-                }
-            }
-
-            scm {
-                connection = "scm:git:git://github.com/cloudshiftinc/gradle-release-plugin.git/"
-                developerConnection = "scm:git:ssh://github.com:cloudshiftinc/gradle-release-plugin.git"
-                url = "https://github.com/cloudshiftinc/gradle-release-plugin"
-            }
-
-            developers {
-                developer {
-                    name = "Chris Lee"
-                    email = "chris@cloudshiftconsulting.com"
-                }
-            }
-        }
-    }
-*/
-
-//signing {
-//    val signingKey: String? by project
-//    val signingPassword: String? by project
-//    useInMemoryPgpKeys(signingKey, signingPassword)
-//    sign(publishing.publications)
-//    isRequired = !isSnapshot
-//}
+signing {
+    val signingKey: String? by project
+    val signingPassword: String? by project
+    useInMemoryPgpKeys(signingKey, signingPassword)
+    sign(publishing.publications)
+    isRequired = !isSnapshot
+}
 
 val publishingPredicate = provider {
     val ci = System.getenv()["CI"] == "true"

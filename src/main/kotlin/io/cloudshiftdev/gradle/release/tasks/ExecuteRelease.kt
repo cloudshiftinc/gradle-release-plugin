@@ -5,8 +5,6 @@ import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.nextPatch
 import io.github.z4kn4fein.semver.nextPreRelease
 import io.github.z4kn4fein.semver.toVersion
-import java.util.UUID
-import javax.inject.Inject
 import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -16,26 +14,36 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import java.util.*
+import javax.inject.Inject
 
 public abstract class ExecuteRelease
 @Inject
 constructor(private val objects: ObjectFactory, private val fs: FileSystemOperations) :
     AbstractReleaseTask() {
-    @get:Internal internal abstract val preReleaseHooks: ListProperty<PreReleaseHookSpec<*>>
+    @get:Internal
+    internal abstract val preReleaseHooks: ListProperty<PreReleaseHookSpec<*>>
 
-    @get:InputFile internal abstract val versionPropertiesFile: RegularFileProperty
+    @get:InputFile
+    internal abstract val versionPropertiesFile: RegularFileProperty
 
-    @get:Input internal abstract val versionPropertyName: Property<String>
+    @get:Input
+    internal abstract val versionPropertyName: Property<String>
 
-    @get:Input internal abstract val versionTagTemplate: Property<String>
+    @get:Input
+    internal abstract val versionTagTemplate: Property<String>
 
-    @get:Input internal abstract val versionTagCommitMessage: Property<String>
+    @get:Input
+    internal abstract val versionTagCommitMessage: Property<String>
 
-    @get:Input internal abstract val releaseCommitMessage: Property<String>
+    @get:Input
+    internal abstract val releaseCommitMessage: Property<String>
 
-    @get:Input internal abstract val incrementAfterRelease: Property<Boolean>
+    @get:Input
+    internal abstract val incrementAfterRelease: Property<Boolean>
 
-    @get:Input internal abstract val newVersionCommitMessage: Property<String>
+    @get:Input
+    internal abstract val newVersionCommitMessage: Property<String>
 
     @TaskAction
     public fun action() {
@@ -56,14 +64,14 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
 
         // commit anything from pre-release tasks + version bump
         git.commit(
-            "${releaseCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}"
+            "${releaseCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}",
         )
 
         // tag with incremented version
         val versionTag = versionTagTemplate.get().replace("\$version", versions.version.toString())
         git.tag(
             versionTag,
-            "${versionTagCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}"
+            "${versionTagCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}",
         )
 
         // push everything; this finalizes the release
@@ -78,7 +86,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
             }
             git.addUnstagedFiles()
             git.commit(
-                "${newVersionCommitMessage.get()} ${postReleaseVersions.previousVersion} -> ${postReleaseVersions.version}"
+                "${newVersionCommitMessage.get()} ${postReleaseVersions.previousVersion} -> ${postReleaseVersions.version}",
             )
             git.push()
         }
@@ -95,8 +103,8 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
                         PreReleaseHook.HookContext(
                             versions.previousVersion,
                             versions.version,
-                            workingDirectory = workingDirectory
-                        )
+                            workingDirectory = workingDirectory,
+                        ),
                     )
                 } finally {
                     fs.delete { delete(workingDirectory) }
@@ -124,7 +132,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
                 }
                 .firstOrNull()
                 ?: releaseError(
-                    "Unable to resolve version property '${versionPropertyName.get()}' in ${versionPropertiesFile.get()}"
+                    "Unable to resolve version property '${versionPropertyName.get()}' in ${versionPropertiesFile.get()}",
                 )
 
         val nextVersion = versionIncrementer(currentVersion)
