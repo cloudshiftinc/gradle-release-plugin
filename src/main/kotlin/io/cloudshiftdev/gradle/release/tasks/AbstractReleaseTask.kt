@@ -9,8 +9,7 @@ import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault
 public abstract class AbstractReleaseTask : DefaultTask() {
-    @get:ServiceReference
-    internal abstract val gitRepository: Property<GitRepository>
+    @get:ServiceReference internal abstract val gitRepository: Property<GitRepository>
 
     protected fun releaseError(msg: String): Nothing = releasePluginError("Cannot release; $msg")
 }

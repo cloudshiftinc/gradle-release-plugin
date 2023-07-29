@@ -4,14 +4,14 @@ package io.cloudshiftdev.gradle.release
 
 import io.cloudshiftdev.gradle.release.hooks.PreProcessFilesHook
 import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
+import javax.inject.Inject
+import kotlin.reflect.KClass
 import org.gradle.api.Action
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.kotlin.dsl.newInstance
-import javax.inject.Inject
-import kotlin.reflect.KClass
 
 public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactory) {
 
@@ -54,10 +54,8 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
 
     internal val versionProperties = objects.newInstance<VersionProperties>()
 
-    /**
-     * Configure where the version property lives.
-     */
-    public fun versionProperties(action : Action<VersionProperties>) {
+    /** Configure where the version property lives. */
+    public fun versionProperties(action: Action<VersionProperties>) {
         action.execute(versionProperties)
     }
 
@@ -103,7 +101,7 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
 
     public val git: Git = objects.newInstance<Git>()
 
-    public fun git(action : Action<Git>) {
+    public fun git(action: Action<Git>) {
         action.execute(git)
     }
 
@@ -114,28 +112,28 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
          *
          * Default: **false**
          */
-        public abstract val signTag : Property<Boolean>
+        public abstract val signTag: Property<Boolean>
 
         /**
-         * Regex for branches which releases must be done off of.  Set to empty string to ignore.
+         * Regex for branches which releases must be done off of. Set to empty string to ignore.
          *
          * Default: **main**
          */
-        public abstract val releaseBranchPattern : Property<String>
+        public abstract val releaseBranchPattern: Property<String>
 
         /**
          * List of options to use during a commit, e.g. '-s'
          *
          * Default: **<empty>**
          */
-        public abstract val commitOptions : ListProperty<String>
+        public abstract val commitOptions: ListProperty<String>
 
         /**
          * List of options to use during a push, e.g. '--no-verify'
          *
          * Default: **<empty>**
          */
-        public abstract val pushOptions : ListProperty<String>
+        public abstract val pushOptions: ListProperty<String>
 
         /**
          * Whether to fail the release if there are untracked (unstaged) files.
@@ -167,14 +165,17 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
     }
 }
 
-internal class PreReleaseHookSpec<T : PreReleaseHook>(val clazz: Class<T>, val parameters: Array<out Any>)
+internal class PreReleaseHookSpec<T : PreReleaseHook>(
+    val clazz: Class<T>,
+    val parameters: Array<out Any>
+)
 
 /**
  * Adds a pre-release hook for processing files, either via templates or in-line token replacements.
  *
  * Commonly used to insert version number into documentation files, such as README.md.
  */
-public fun ReleaseExtension.preProcessFiles(action : Action<PreProcessFilesDsl>) {
+public fun ReleaseExtension.preProcessFiles(action: Action<PreProcessFilesDsl>) {
     val dsl = PreProcessFilesDsl()
     action.execute(dsl)
 
@@ -189,19 +190,15 @@ public class PreProcessFilesDsl {
     internal val templateSpecs = mutableListOf<PreProcessFilesHook.TemplateSpec>()
     internal val replacementSpecs = mutableListOf<PreProcessFilesHook.ReplacementSpec>()
 
-    /**
-     *
-     */
-    public fun templates(sourceDir: Any, destinationDir: Any, action : Action<TemplateDsl>) {
+    /**  */
+    public fun templates(sourceDir: Any, destinationDir: Any, action: Action<TemplateDsl>) {
         val dsl = TemplateDsl(sourceDir, destinationDir)
         action.execute(dsl)
         templateSpecs.add(dsl.build())
     }
 
-    /**
-     *
-     */
-    public fun replacements(action : Action<ReplacementDsl>) {
+    /**  */
+    public fun replacements(action: Action<ReplacementDsl>) {
         val dsl = ReplacementDsl()
         action.execute(dsl)
         replacementSpecs.add(dsl.build())
@@ -213,22 +210,19 @@ public class PreProcessFilesDsl {
         private val excludes = mutableListOf<String>()
         private val properties = mutableMapOf<String, String>()
 
-        /**
-         *
-         */
+        /**  */
         public fun includes(vararg pattern: String) {
             includes.addAll(pattern)
         }
 
-        /**
-         *
-         */
+        /**  */
         public fun excludes(vararg pattern: String) {
             excludes.addAll(pattern)
         }
 
         /**
-         * By default, files generated from templates will fail the build if they have been tampered with.
+         * By default, files generated from templates will fail the build if they have been tampered
+         * with.
          *
          * Call `allowTampering` to disable this check.
          */
@@ -253,43 +247,37 @@ public class PreProcessFilesDsl {
         private val excludes = mutableListOf<String>()
         private val replacements = mutableMapOf<String, String>()
 
-        /**
-         *
-         */
+        /**  */
         public fun includes(vararg pattern: String) {
             includes.addAll(pattern)
         }
 
-        /**
-         *
-         */
+        /**  */
         public fun excludes(vararg pattern: String) {
             excludes.addAll(pattern)
         }
 
-        /**
-         *
-         */
+        /**  */
         public fun replace(string: String, replacement: String) {
             replacements.put(string, replacement)
         }
 
-        /**
-         *
-         */
+        /**  */
         public fun replace(replacement: Pair<String, String>) {
             replacements.put(replacement.first, replacement.second)
         }
 
-        /**
-         *
-         */
+        /**  */
         public fun replace(replacements: Map<String, String>) {
             this.replacements.putAll(replacements)
         }
 
         internal fun build(): PreProcessFilesHook.ReplacementSpec {
-            return PreProcessFilesHook.ReplacementSpec(includes = includes, excludes = excludes, replacements = replacements)
+            return PreProcessFilesHook.ReplacementSpec(
+                includes = includes,
+                excludes = excludes,
+                replacements = replacements
+            )
         }
     }
 }

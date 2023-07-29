@@ -4,6 +4,9 @@ import io.cloudshiftdev.gradle.release.GitRepository.GitStatus.Uncommitted
 import io.cloudshiftdev.gradle.release.GitRepository.GitStatus.Untracked
 import io.cloudshiftdev.gradle.release.util.releasePluginError
 import io.cloudshiftdev.gradle.release.util.warningOrError
+import java.io.ByteArrayOutputStream
+import java.io.File
+import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logging
@@ -11,14 +14,9 @@ import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.process.ExecOperations
-import java.io.ByteArrayOutputStream
-import java.io.File
-import javax.inject.Inject
 
-
-internal abstract class GitRepository
-@Inject
-constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Params> {
+internal abstract class GitRepository @Inject constructor(private val execOps: ExecOperations) :
+    BuildService<GitRepository.Params> {
     private val logger = Logging.getLogger(GitRepository::class.java)
 
     internal interface Params : BuildServiceParameters {
@@ -28,7 +26,8 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
 
     private object GitCommands {
 
-        // current branch (see https://git-blame.blogspot.com/2013/06/checking-current-branch-programatically.html)
+        // current branch (see
+        // https://git-blame.blogspot.com/2013/06/checking-current-branch-programatically.html)
         val CurrentBranch = listOf("symbolic-ref", "--short", "-q", "HEAD")
     }
 
@@ -38,7 +37,9 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
         val gitVersion = git("version")
         logger.info("Git version: ${gitVersion.output}")
 
-        workingDir = findGitDirectory(parameters.projectDir.get().asFile) ?: releasePluginError("Git repository not found")
+        workingDir =
+            findGitDirectory(parameters.projectDir.get().asFile)
+                ?: releasePluginError("Git repository not found")
 
         verifyGitRepoExists()
         verifyReleaseBranch()
@@ -46,9 +47,7 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
 
     private fun findGitDirectory(dir: File): File? {
         return when {
-            dir.resolve(".git")
-                .exists() -> dir
-
+            dir.resolve(".git").exists() -> dir
             else -> dir.parentFile?.let { findGitDirectory(it) }
         }
     }
@@ -56,7 +55,8 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
     private fun verifyGitRepoExists() {
         git("rev-parse", "--git-dir")
         val hasCommitsOutput = git("rev-list", "-n", "1", "--all")
-        if (hasCommitsOutput.output.isBlank()) releasePluginError("Git repository is empty; please commit something first")
+        if (hasCommitsOutput.output.isBlank())
+            releasePluginError("Git repository is empty; please commit something first")
     }
 
     private fun verifyReleaseBranch() {
@@ -64,31 +64,35 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
         if (patternStr.isBlank()) return
 
         val cmdResult = git(GitCommands.CurrentBranch)
-        val currentBranch = cmdResult.outputLines.firstOrNull() ?: releasePluginError("Unable to determine current branch")
+        val currentBranch =
+            cmdResult.outputLines.firstOrNull()
+                ?: releasePluginError("Unable to determine current branch")
         logger.info("Currently on branch $currentBranch")
         val pattern = Regex(patternStr)
-        pattern.matchEntire(currentBranch) ?: releasePluginError("Currently on branch ${currentBranch}; required branches for release: $patternStr")
+        pattern.matchEntire(currentBranch)
+            ?: releasePluginError(
+                "Currently on branch ${currentBranch}; required branches for release: $patternStr"
+            )
     }
 
     fun checkCommitNeeded() {
         val statusResult = git("status", "--porcelain")
-        val status = statusResult.outputLines.groupBy {
-            when {
-                it.trim()
-                    .startsWith("??") -> Untracked
-
-                else -> Uncommitted
+        val status =
+            statusResult.outputLines.groupBy {
+                when {
+                    it.trim().startsWith("??") -> Untracked
+                    else -> Uncommitted
+                }
             }
-        }
         val untracked = status[Untracked] ?: emptyList()
         val uncommitted = status[Uncommitted] ?: emptyList()
 
         when {
-            untracked.isNotEmpty() -> warningOrError(
-                gitSettings().failOnUntrackedFiles.get(),
-                "You have untracked files:\n${untracked.joinToString("\n")}"
-            )
-
+            untracked.isNotEmpty() ->
+                warningOrError(
+                    gitSettings().failOnUntrackedFiles.get(),
+                    "You have untracked files:\n${untracked.joinToString("\n")}"
+                )
             uncommitted.isNotEmpty() ->
                 warningOrError(
                     gitSettings().failOnUncommittedFiles.get(),
@@ -103,18 +107,26 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
     }
 
     private fun gitSettings() = parameters.gitSettings.get()
+
     fun checkUpdatedNeeded() {
 
         git("remote", "update")
 
-        val behind = git("rev-list", "--count", "HEAD..@{upstream}", "--").outputLines.first()
-            .toInt()
-        val ahead = git("rev-list", "--count", "@{upstream}..HEAD").outputLines.first()
-            .toInt()
+        val behind =
+            git("rev-list", "--count", "HEAD..@{upstream}", "--").outputLines.first().toInt()
+        val ahead = git("rev-list", "--count", "@{upstream}..HEAD").outputLines.first().toInt()
 
         when {
-            ahead > 0 -> warningOrError(gitSettings().failOnPushNeeded.get(), "You have $ahead change(s) to push.")
-            behind > 0 -> warningOrError(gitSettings().failOnPullNeeded.get(), "You have $behind change(s) to pull.")
+            ahead > 0 ->
+                warningOrError(
+                    gitSettings().failOnPushNeeded.get(),
+                    "You have $ahead change(s) to push."
+                )
+            behind > 0 ->
+                warningOrError(
+                    gitSettings().failOnPullNeeded.get(),
+                    "You have $behind change(s) to pull."
+                )
         }
     }
 
@@ -132,7 +144,8 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
         git(args)
     }
 
-    private fun git(vararg args: String, block: (GitDsl).() -> Unit = {}) = git(args.toList(), block)
+    private fun git(vararg args: String, block: (GitDsl).() -> Unit = {}) =
+        git(args.toList(), block)
 
     private fun git(args: List<String>, block: (GitDsl).() -> Unit = {}): GitOutput {
         val dsl = GitDsl()
@@ -146,18 +159,20 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
 
         val stdOutput = ByteArrayOutputStream()
         val stdError = ByteArrayOutputStream()
-        val execResult = execOps.exec {
-            workingDir = this.workingDir
-            commandLine(commandLine)
+        val execResult =
+            execOps.exec {
+                workingDir = this.workingDir
+                commandLine(commandLine)
 
-            standardOutput = stdOutput
-            errorOutput = stdError
-            isIgnoreExitValue = true
-            environment = mapOf(
-                "GIT_CURL_VERBOSE" to "1",
-                "GIT_TRACE" to "1",
-            )
-        }
+                standardOutput = stdOutput
+                errorOutput = stdError
+                isIgnoreExitValue = true
+                environment =
+                    mapOf(
+                        "GIT_CURL_VERBOSE" to "1",
+                        "GIT_TRACE" to "1",
+                    )
+            }
         logger.info("Exit code: ${execResult.exitValue}")
 
         return when (execResult.exitValue) {
@@ -186,6 +201,7 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
 
     private class GitDsl {
         val args = mutableListOf<String>()
+
         fun args(vararg args: String) {
             this.args.addAll(args.toList())
         }
@@ -193,10 +209,6 @@ constructor(private val execOps: ExecOperations) : BuildService<GitRepository.Pa
 }
 
 private data class GitOutput(val output: String) {
-    val outputLines = output.split("\n")
-        .map {
-            it.replace("\n", "")
-                .replace("\r", "")
-        }
-        .dropWhile { it.isBlank() }
+    val outputLines =
+        output.split("\n").map { it.replace("\n", "").replace("\r", "") }.dropWhile { it.isBlank() }
 }

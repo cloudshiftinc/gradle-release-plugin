@@ -6,5 +6,9 @@ import java.io.File
 public interface PreReleaseHook {
     public fun execute(context: HookContext)
 
-    public data class HookContext(val previousVersion: Version, val incomingVersion: Version, val workingDirectory: File)
+    public data class HookContext(
+        val previousVersion: Version,
+        val incomingVersion: Version,
+        val workingDirectory: File
+    )
 }

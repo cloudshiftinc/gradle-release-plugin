@@ -18,25 +18,24 @@ class BasicReleaseTests : FunSpec() {
             val testEnvironment = gradleTestEnvironment {
                 baseReleasePluginConfiguration()
 
-                gradleProperties {
-                    "version" to "0.3.0-SNAPSHOT"
-                }
+                gradleProperties { "version" to "0.3.0-SNAPSHOT" }
             }
 
             val buildResult = testEnvironment.runner.run()
 
             withClue(buildResult.output) {
-
-                buildResult.failed()
-                    .shouldBe(false)
+                buildResult.failed().shouldBe(false)
 
                 // check that expected commits are present
-                testEnvironment.gitLog().reversed().shouldContainInOrder(
-                    "Initial commit",
-                    "Build setup",
-                    "[Release] - release commit: 0.3.0-SNAPSHOT -> 0.3.0",
-                    "[Release] - new version commit: 0.3.0 -> 0.3.1-SNAPSHOT"
-                )
+                testEnvironment
+                    .gitLog()
+                    .reversed()
+                    .shouldContainInOrder(
+                        "Initial commit",
+                        "Build setup",
+                        "[Release] - release commit: 0.3.0-SNAPSHOT -> 0.3.0",
+                        "[Release] - new version commit: 0.3.0 -> 0.3.1-SNAPSHOT"
+                    )
 
                 // check that expected tag is present
                 testEnvironment.gitTags().shouldContainInOrder("v0.3.0")
@@ -50,5 +49,3 @@ class BasicReleaseTests : FunSpec() {
         }
     }
 }
-
-

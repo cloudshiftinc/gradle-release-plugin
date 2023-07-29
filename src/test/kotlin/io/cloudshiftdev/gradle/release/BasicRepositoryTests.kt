@@ -15,9 +15,7 @@ class BasicRepositoryTests : FunSpec() {
                 baseReleasePluginConfiguration()
 
                 // remove GIT repository entirely
-                setup {
-                    it.removeRepository()
-                }
+                setup { it.removeRepository() }
             }
 
             val buildResult = testEnvironment.runner.run()
@@ -47,10 +45,10 @@ class BasicRepositoryTests : FunSpec() {
                 // expecting failure as repository is empty
                 buildResult.failed().shouldBe(true)
 
-                buildResult.output.shouldContain("Git repository is empty; please commit something first")
+                buildResult.output.shouldContain(
+                    "Git repository is empty; please commit something first"
+                )
             }
         }
     }
 }
-
-
