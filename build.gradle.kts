@@ -4,7 +4,7 @@ plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
  //   signing
-    id("io.cloudshiftdev.release") version "0.1.18"
+//    id("io.cloudshiftdev.release") version "0.1.19"
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
