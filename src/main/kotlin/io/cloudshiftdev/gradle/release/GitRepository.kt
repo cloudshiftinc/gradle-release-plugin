@@ -130,7 +130,7 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
         }
     }
 
-    fun addUnstagedFiles() {
+    fun stageFiles() {
         git("add", ".")
     }
 

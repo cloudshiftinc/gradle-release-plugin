@@ -1,12 +1,11 @@
 package io.cloudshiftdev.gradle.release.tasks
 
 import io.cloudshiftdev.gradle.release.PreReleaseHookSpec
+import io.cloudshiftdev.gradle.release.util.PropertiesFile
 import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.nextPatch
 import io.github.z4kn4fein.semver.nextPreRelease
 import io.github.z4kn4fein.semver.toVersion
-import java.util.*
-import javax.inject.Inject
 import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -16,6 +15,8 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import java.util.*
+import javax.inject.Inject
 
 public abstract class ExecuteRelease
 @Inject
@@ -52,7 +53,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
         executePreReleaseHooks(versions)
 
         // add any files that may have been created/modified by pre-release tasks
-        git.addUnstagedFiles()
+        git.stageFiles()
 
         // commit anything from pre-release tasks + version bump
         git.commit(
@@ -76,7 +77,7 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
                 // TODO - configuration for which to increment
                 it.nextPreRelease("SNAPSHOT")
             }
-            git.addUnstagedFiles()
+            git.stageFiles()
             git.commit(
                 "${newVersionCommitMessage.get()} ${postReleaseVersions.previousVersion} -> ${postReleaseVersions.version}",
             )
@@ -111,35 +112,23 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
     }
 
     private fun incrementVersion(versionIncrementer: (Version) -> Version): Versions {
-        val propertiesFile = versionPropertiesFile.get().asFile
 
-        val propertyLines = propertiesFile.readLines()
-        val currentVersion =
-            propertyLines
-                .mapNotNull {
-                    val pieces = it.split("=", limit = 2)
-                    if (pieces.size != 2) return@mapNotNull null
-                    if (pieces[0].trim() != versionPropertyName.get()) return@mapNotNull null
-                    pieces[1].toVersion()
-                }
-                .firstOrNull()
-                ?: releaseError(
-                    "Unable to resolve version property '${versionPropertyName.get()}' in ${versionPropertiesFile.get()}",
-                )
+        val propertiesFile = versionPropertiesFile.get().asFile
+        val currentVersionStr =
+            PropertiesFile.loadProperty(versionPropertyName.get(), propertiesFile)
+                ?: "0.1.0-SNAPSHOT"
+        val currentVersion = currentVersionStr.toVersion()
 
         val nextVersion = versionIncrementer(currentVersion)
 
         logger.lifecycle("Incremented version from $currentVersion to $nextVersion")
 
-        val updatedProperties =
-            propertyLines.map {
-                val pieces = it.split("=", limit = 2)
-                if (pieces.size != 2) return@map it
-                if (pieces[0].trim() != versionPropertyName.get()) return@map it
-                "${versionPropertyName.get()}=$nextVersion"
-            }
+        PropertiesFile.updateProperty(
+            versionPropertyName.get(),
+            nextVersion.toString(),
+            propertiesFile,
+        )
 
-        propertiesFile.writeText(updatedProperties.joinToString("\n"))
         return Versions(previousVersion = currentVersion, version = nextVersion)
     }
 

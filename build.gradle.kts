@@ -60,6 +60,8 @@ dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
 
+    implementation("org.apache.commons:commons-configuration2:2.9.0")
+
     // testing libraries
     testImplementation(platform(libs.junit.bom))
     testRuntimeOnly(platform(libs.junit.bom))
