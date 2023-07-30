@@ -9,13 +9,13 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.Logging
+import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.provideDelegate
 import org.gradle.kotlin.dsl.registerIfAbsent
 import org.gradle.kotlin.dsl.registering
 import org.gradle.kotlin.dsl.withType
-import org.gradle.kotlin.dsl.assign
 import org.gradle.util.GradleVersion
 
 public abstract class ReleasePlugin : Plugin<Project> {

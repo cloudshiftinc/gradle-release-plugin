@@ -4,7 +4,8 @@ plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
     signing
-//    id("io.cloudshiftdev.release") version "0.1.19"
+    //    id("io.cloudshiftdev.release") version "0.1.20"
+    //    alias(libs.plugins.release)
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
@@ -84,8 +85,12 @@ dependencies { ktfmt("com.facebook:ktfmt:0.44") }
 val ktfmtFormat by
     tasks.registering(JavaExec::class) {
         val ktfmtArgs =
-            mutableListOf("--kotlinlang-style", layout.projectDirectory.asFile.absolutePath)
-      //  if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
+            mutableListOf(
+                "--kotlinlang-style",
+                "--do-not-remove-unused-imports",
+                layout.projectDirectory.asFile.absolutePath
+            )
+        if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
         group = "formatting"
         description = "Run ktfmt"
         classpath = ktfmt
@@ -94,9 +99,11 @@ val ktfmtFormat by
         args(ktfmtArgs)
     }
 
+val check = tasks.named("check") { dependsOn(ktfmtFormat) }
+
 tasks.register("precommit") {
     group = "verification"
-    dependsOn(tasks.named("check"))
+    dependsOn(check)
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach {
