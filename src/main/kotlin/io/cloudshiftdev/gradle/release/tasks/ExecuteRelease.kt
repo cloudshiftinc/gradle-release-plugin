@@ -21,7 +21,9 @@ import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
-@DisableCachingByDefault(because = "Releases are infrequent and by definition change the task inputs")
+@DisableCachingByDefault(
+    because = "Releases are infrequent and by definition change the task inputs"
+)
 public abstract class ExecuteRelease
 @Inject
 constructor(private val objects: ObjectFactory, private val fs: FileSystemOperations) :
