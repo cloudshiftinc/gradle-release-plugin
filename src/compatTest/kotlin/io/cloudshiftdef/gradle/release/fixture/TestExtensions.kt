@@ -42,7 +42,7 @@ fun dumpWorkingDir(workingDir: File) {
     println("Working directory $workingDir:")
     workingDir.walk(FileWalkDirection.TOP_DOWN).forEach {
         val relative = it.relativeTo(workingDir).toString()
-        if(relative.isBlank()) return@forEach
+        if (relative.isBlank()) return@forEach
         println("> $relative")
     }
 }
