@@ -1,6 +1,5 @@
-package io.cloudshiftdev.gradle.release.fixture
+package io.cloudshiftdef.gradle.release.fixture
 
-import io.cloudshiftdev.gradle.release.PluginSpec
 import io.kotest.core.TestConfiguration
 import io.kotest.engine.spec.tempdir
 import java.io.File
@@ -158,11 +157,12 @@ internal class GradleBuild {
 
 internal fun GradleRunner.releasePluginConfiguration() {
     withPluginClasspath()
-    withDebug(true)
+//    withDebug(true)
+    withGradleVersion(System.getProperty("compat.gradle.version"))
     withArguments("release", "--info", "--stacktrace")
 }
 
-private val ReleasePluginId = "id(\"${PluginSpec.Id}\")"
+private val ReleasePluginId = "id(\"io.cloudshiftdev.release\")"
 
 private fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
     val upstreamUrl = upstreamRepositoryDir.toURI().toURL().toString().replace("file:/", "file:///")

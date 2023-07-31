@@ -23,15 +23,12 @@ plugins {
 
 The plugin is currently compatible with:
 
-| Plugin version | Gradle version                                                      |  
-| --- |---------------------------------------------------------------------|
-| < 1.0 | 8.0.x (Java 8 - 19)<br/>8.1.x (Java 8 - 19)<br/>8.2.x (Java 8 - 19) |
+| Plugin version | Gradle version                                                                                                                                                                             |  
+| --- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| < 1.0 | 7.0.x - 7.2.x (Java 8 -16)<br/>7.3.x - 7.5.x (Java 8 - 17)<br/>7.6.x - 8.2.x (Java 8 - 19)<br/>8.3.x (Java 8 - 20) |
 
 *See the [Gradle Compatibility Matrix](https://docs.gradle.org/current/userguide/compatibility.html#java) for what Java versions are supported for running Gradle (note: the Java version
 used to run Gradle is different than specified Toolchain version, if any).*
-
-*As this plugin's test platform matures we may consider extending compatibility to
-older Gradle versions*
 
 # Usage
 
@@ -127,5 +124,17 @@ release {
     preReleaseHook<HookClass>()
 }
 ```
+
+## Test Matrix
+
+This plugin is tested against the below matrix of Java and Gradle versions.
+
+| Java Version | Gradle Version |
+| --- | --- |
+| Java 8 | Gradle 7.0.2, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
+| Java 11 | Gradle 7.0.2, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
+| Java 17 | Gradle 7.3.3, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
+| Java 19 | Gradle 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
+| Java 20 | Gradle 8.3-rc-2 |
 
 

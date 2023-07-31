@@ -36,8 +36,8 @@ public abstract class ReleasePlugin : Plugin<Project> {
 
             // register this as a project-scoped service (by encoding project path in the service
             // name)
-            // such that we can benefit from all the service-management infra (lazy-instiation,
-            // lifecycle management, etc)
+            // such that we can benefit from all the service-management infra (lazy-instantiation,
+            // lifecycle management, etc.)
             val gitRepository =
                 gradle.sharedServices.registerIfAbsent(
                     "${PluginSpec.Id}-${project.path}",
@@ -55,6 +55,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
             // configure all release tasks (this catches tasks added later)
             tasks.withType<AbstractReleaseTask>().configureEach {
                 this.gitRepository.set(gitRepository)
+                usesService(gitRepository)
             }
 
             val defaultPreReleaseChecks =
@@ -137,33 +138,39 @@ internal fun checkPlatformCompatibility() {
 
     val supportedVersions =
         listOf(
-                //        SupportedGradleVersion(gradleVersion = GradleVersion.version("6.9"),
-                // javaVersionRange = minimumJavaVersion..15),
-                //        SupportedGradleVersion(gradleVersion = GradleVersion.version("7.3"),
-                // javaVersionRange = minimumJavaVersion..16),
-                //        SupportedGradleVersion(gradleVersion = GradleVersion.version("7.3"),
-                // javaVersionRange = minimumJavaVersion..17),
-                //        SupportedGradleVersion(gradleVersion = GradleVersion.version("7.5"),
-                // javaVersionRange = minimumJavaVersion..18),
-                //        SupportedGradleVersion(gradleVersion = GradleVersion.version("7.6"),
-                // javaVersionRange = minimumJavaVersion..19),
-                GradleSupportSpec(
-                    gradleVersion = GradleVersion.version("8.0"),
-                    javaVersionRange = 8..19,
-                ),
-                GradleSupportSpec(
-                    gradleVersion = GradleVersion.version("8.1"),
-                    javaVersionRange = 8..19,
-                ),
-                GradleSupportSpec(
-                    gradleVersion = GradleVersion.version("8.2"),
-                    javaVersionRange = 8..19,
-                ),
-                GradleSupportSpec(
-                    gradleVersion = GradleVersion.version("8.3"),
-                    javaVersionRange = 8..20,
-                ),
-            )
+            GradleSupportSpec(
+                gradleVersion = GradleVersion.version("7.0"),
+                javaVersionRange = 8..16,
+            ),
+            GradleSupportSpec(
+                gradleVersion = GradleVersion.version("7.3"),
+                javaVersionRange = 8..17,
+            ),
+            GradleSupportSpec(
+                gradleVersion = GradleVersion.version("7.5"),
+                javaVersionRange = 8..18,
+            ),
+            GradleSupportSpec(
+                gradleVersion = GradleVersion.version("7.6"),
+                javaVersionRange = 8..19,
+            ),
+            GradleSupportSpec(
+                gradleVersion = GradleVersion.version("8.0"),
+                javaVersionRange = 8..19,
+            ),
+            GradleSupportSpec(
+                gradleVersion = GradleVersion.version("8.1"),
+                javaVersionRange = 8..19,
+            ),
+            GradleSupportSpec(
+                gradleVersion = GradleVersion.version("8.2"),
+                javaVersionRange = 8..19,
+            ),
+            GradleSupportSpec(
+                gradleVersion = GradleVersion.version("8.3"),
+                javaVersionRange = 8..20,
+            ),
+        )
             .sortedBy { it.gradleVersion }
 
     val x = supportedVersions.map { it.gradleVersion }.first()
@@ -173,7 +180,7 @@ internal fun checkPlatformCompatibility() {
     val gradleVersion = GradleVersion.current()
 
     val gradleSupportSpec =
-        supportedVersions.firstOrNull() {
+        supportedVersions.firstOrNull {
             gradleVersion.version.startsWith(it.gradleVersion.version)
         }
 
@@ -189,12 +196,14 @@ internal fun checkPlatformCompatibility() {
                         "[${PluginSpec.Id}] Gradle $gradleVersion is not formally supported by this version of the plugin (supported: Gradle $supportedGradleVersionRange",
                     )
                 }
+
                 else ->
                     releasePluginError(
                         "Gradle $gradleVersion not supported; supported: Gradle $supportedGradleVersionRange",
                     )
             }
         }
+
         else -> {
             val javaVersion = JavaVersion.current().majorVersion.toInt()
             if (javaVersion !in gradleSupportSpec.javaVersionRange) {

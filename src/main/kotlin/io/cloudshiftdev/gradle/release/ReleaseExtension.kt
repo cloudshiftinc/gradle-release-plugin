@@ -269,12 +269,12 @@ public class PreProcessFilesDsl {
 
         /**  */
         public fun replace(string: String, replacement: String) {
-            replacements.put(string, replacement)
+            replacements[string] = replacement
         }
 
         /**  */
         public fun replace(replacement: Pair<String, String>) {
-            replacements.put(replacement.first, replacement.second)
+            replacements[replacement.first] = replacement.second
         }
 
         /**  */

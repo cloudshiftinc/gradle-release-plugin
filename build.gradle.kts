@@ -1,10 +1,14 @@
 import com.gradle.publish.PublishTask
+import java.util.*
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
     signing
+    id("org.ajoberstar.stutter") version "0.7.2"
     //    id("io.cloudshiftdev.release") version "0.1.20"
     //    alias(libs.plugins.release)
 }
@@ -21,6 +25,60 @@ gradlePlugin {
             displayName = "Gradle Release Plugin"
             description = project.description
             tags.set(listOf("release", "version", "release management"))
+        }
+    }
+}
+
+stutter {
+    sparse.set(true)
+    matrices {
+        val minGradleVersion = "7.0"
+        // cover off Java LTS releases (8, 11, 17) and the max supported by Gradle (19, 20)
+        create("java8") {
+            javaToolchain {
+                languageVersion.set(JavaLanguageVersion.of(8))
+            }
+            gradleVersions {
+                compatibleRange(minGradleVersion)
+            }
+        }
+        create("java11") {
+            javaToolchain {
+                languageVersion.set(JavaLanguageVersion.of(11))
+            }
+            gradleVersions {
+                compatibleRange(minGradleVersion)
+            }
+        }
+
+        // Gradle 7.3 supports running on Java 17
+        create("java17") {
+            javaToolchain {
+                languageVersion.set(JavaLanguageVersion.of(17))
+            }
+            gradleVersions {
+                compatibleRange("7.3")
+            }
+        }
+
+        // Gradle 7.6 supports running on Java 19
+        create("java19") {
+            javaToolchain {
+                languageVersion.set(JavaLanguageVersion.of(19))
+            }
+            gradleVersions {
+                compatibleRange("7.6")
+            }
+        }
+
+        // Gradle 8.3 supports running on Java 20
+        create("java20") {
+            javaToolchain {
+                languageVersion.set(JavaLanguageVersion.of(20))
+            }
+            gradleVersions {
+                compatibleRange("8.3")
+            }
         }
     }
 }
@@ -77,43 +135,63 @@ dependencies {
     implementation(libs.semver)
 
     // testing libraries
-    testImplementation(platform(libs.junit.bom))
-    testRuntimeOnly(platform(libs.junit.bom))
-    testRuntimeOnly(libs.junit.jupiter.engine)
+    compatTestImplementation(platform(libs.junit.bom))
+    compatTestRuntimeOnly(platform(libs.junit.bom))
+    compatTestRuntimeOnly(libs.junit.jupiter.engine)
 
-    testImplementation(platform(libs.kotest.bom))
-    testImplementation(libs.kotest.assertions.core)
-    testImplementation(libs.kotest.assertions.json)
-    testImplementation(libs.kotest.framework.datatest)
-    testImplementation(libs.kotest.property)
-    testImplementation(libs.kotest.runner.junit5)
+    compatTestImplementation(platform(libs.kotest.bom))
+    compatTestImplementation(libs.kotest.assertions.core)
+    compatTestImplementation(libs.kotest.assertions.json)
+    compatTestImplementation(libs.kotest.framework.datatest)
+    compatTestImplementation(libs.kotest.property)
+    compatTestImplementation(libs.kotest.runner.junit5)
 
-    testImplementation(libs.jetbrains.kotlinx.datetime)
-    testImplementation(libs.jgit)
+    compatTestImplementation(libs.jetbrains.kotlinx.datetime)
+    compatTestImplementation(libs.jgit)
+
+    compatTestImplementation(gradleTestKit())
 }
 
-tasks.named<Test>("test") { useJUnitPlatform() }
+tasks.withType<Test>().configureEach {
+    systemProperty("kotest.framework.dump.config", "true")
+    useJUnitPlatform()
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+    testLogging {
+        events =
+            setOf(
+                TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_OUT,
+                TestLogEvent.STANDARD_ERROR
+            )
+        exceptionFormat = TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+    }
+}
 
 val ktfmt: Configuration by configurations.creating
 
 dependencies { ktfmt("com.facebook:ktfmt:0.44") }
 
 val ktfmtFormat by
-    tasks.registering(JavaExec::class) {
-        val ktfmtArgs =
-            mutableListOf(
-                "--kotlinlang-style",
-                "--do-not-remove-unused-imports",
-                layout.projectDirectory.asFile.absolutePath
-            )
-        if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
-        group = "formatting"
-        description = "Run ktfmt"
-        classpath = ktfmt
-        mainClass.set("com.facebook.ktfmt.cli.Main")
-        //        jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-        args(ktfmtArgs)
-    }
+tasks.registering(JavaExec::class) {
+    val ktfmtArgs =
+        mutableListOf(
+            "--kotlinlang-style",
+            "--do-not-remove-unused-imports",
+            layout.projectDirectory.asFile.absolutePath,
+        )
+    if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
+    group = "formatting"
+    description = "Run ktfmt"
+    classpath = ktfmt
+    mainClass.set("com.facebook.ktfmt.cli.Main")
+    //        jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    args(ktfmtArgs)
+}
 
 val check = tasks.named("check") { dependsOn(ktfmtFormat) }
 
@@ -165,4 +243,17 @@ tasks.withType<PublishToMavenRepository>().configureEach {
 
 tasks.withType<PublishTask>().configureEach {
     onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
+}
+
+fun buildTestMatrixMarkdown(matrixFile : File) : String {
+    return matrixFile.bufferedReader().use {
+        val props = Properties()
+        props.load(it)
+        val keys = props.keys.map(Any::toString).map { it to it.removePrefix("java").toInt() }.sortedBy { it.second }
+        val tableRows = keys.map {versionPair ->
+            val gradleVersions = props[versionPair.first]?.toString()?.split(",")?.joinToString(", ")
+            "| Java ${versionPair.second} | Gradle $gradleVersions |\n"
+        }
+        "| Java Version | Gradle Version |\n| --- | --- |\n" + tableRows.joinToString("\n")
+    }
 }
