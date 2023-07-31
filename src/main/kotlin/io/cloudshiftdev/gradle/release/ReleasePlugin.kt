@@ -50,7 +50,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
                 }
 
             val releaseGroup = "release"
-            val releaseImplGroup = "_release-impl"
+            val releaseImplGroup = "other"
 
             // configure all release tasks (this catches tasks added later)
             tasks.withType<AbstractReleaseTask>().configureEach {
@@ -71,7 +71,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
 
             val preRelease =
                 tasks.register(PreReleaseTaskName) {
-                    group = releaseGroup
+                    group = releaseImplGroup
                     dependsOn(preReleaseChecks)
                     mustRunAfter(preReleaseChecks)
                 }
@@ -135,8 +135,6 @@ public abstract class ReleasePlugin : Plugin<Project> {
 
 internal fun checkPlatformCompatibility() {
 
-    val minimumJavaVersion = 11
-
     val supportedVersions =
         listOf(
                 //        SupportedGradleVersion(gradleVersion = GradleVersion.version("6.9"),
@@ -151,19 +149,19 @@ internal fun checkPlatformCompatibility() {
                 // javaVersionRange = minimumJavaVersion..19),
                 GradleSupportSpec(
                     gradleVersion = GradleVersion.version("8.0"),
-                    javaVersionRange = minimumJavaVersion..19,
+                    javaVersionRange = 8..19,
                 ),
                 GradleSupportSpec(
                     gradleVersion = GradleVersion.version("8.1"),
-                    javaVersionRange = minimumJavaVersion..19,
+                    javaVersionRange = 8..19,
                 ),
                 GradleSupportSpec(
                     gradleVersion = GradleVersion.version("8.2"),
-                    javaVersionRange = minimumJavaVersion..19,
+                    javaVersionRange = 8..19,
                 ),
                 GradleSupportSpec(
                     gradleVersion = GradleVersion.version("8.3"),
-                    javaVersionRange = minimumJavaVersion..20,
+                    javaVersionRange = 8..20,
                 ),
             )
             .sortedBy { it.gradleVersion }
