@@ -29,7 +29,7 @@ workflow(
     ),
 ) {
     val test = job(
-        id = "test", name = """Build on ${expr("matrix.os")}""",
+        id = "test", name = """Test on ${expr("matrix.os")}""",
         runsOn = RunnerType.Custom(expr("matrix.os")),
         _customArguments = mapOf("strategy" to mapOf("matrix" to mapOf("os" to operatingSystems))),
     ) {
@@ -51,7 +51,7 @@ workflow(
                 gradleHomeCacheCleanup = true,
                 gradleHomeCacheIncludes = listOf("jdks", "caches", "notifications"),
                 arguments =
-                "build compatCheck --info --scan --stacktrace",
+                "build compatTest --info --scan --stacktrace",
             ),
         )
     }
