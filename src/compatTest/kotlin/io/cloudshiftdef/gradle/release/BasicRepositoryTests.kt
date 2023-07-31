@@ -1,6 +1,5 @@
 package io.cloudshiftdef.gradle.release
 
-
 import io.cloudshiftdef.gradle.release.fixture.baseReleasePluginConfiguration
 import io.cloudshiftdef.gradle.release.fixture.failed
 import io.cloudshiftdef.gradle.release.fixture.gradleTestEnvironment

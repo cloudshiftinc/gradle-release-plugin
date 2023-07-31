@@ -35,50 +35,30 @@ stutter {
         val minGradleVersion = "7.0"
         // cover off Java LTS releases (8, 11, 17) and the max supported by Gradle (19, 20)
         create("java8") {
-            javaToolchain {
-                languageVersion.set(JavaLanguageVersion.of(8))
-            }
-            gradleVersions {
-                compatibleRange(minGradleVersion)
-            }
+            javaToolchain { languageVersion.set(JavaLanguageVersion.of(8)) }
+            gradleVersions { compatibleRange(minGradleVersion) }
         }
         create("java11") {
-            javaToolchain {
-                languageVersion.set(JavaLanguageVersion.of(11))
-            }
-            gradleVersions {
-                compatibleRange(minGradleVersion)
-            }
+            javaToolchain { languageVersion.set(JavaLanguageVersion.of(11)) }
+            gradleVersions { compatibleRange(minGradleVersion) }
         }
 
         // Gradle 7.3 supports running on Java 17
         create("java17") {
-            javaToolchain {
-                languageVersion.set(JavaLanguageVersion.of(17))
-            }
-            gradleVersions {
-                compatibleRange("7.3")
-            }
+            javaToolchain { languageVersion.set(JavaLanguageVersion.of(17)) }
+            gradleVersions { compatibleRange("7.3") }
         }
 
         // Gradle 7.6 supports running on Java 19
         create("java19") {
-            javaToolchain {
-                languageVersion.set(JavaLanguageVersion.of(19))
-            }
-            gradleVersions {
-                compatibleRange("7.6")
-            }
+            javaToolchain { languageVersion.set(JavaLanguageVersion.of(19)) }
+            gradleVersions { compatibleRange("7.6") }
         }
 
         // Gradle 8.3 supports running on Java 20
         create("java20") {
-            javaToolchain {
-                languageVersion.set(JavaLanguageVersion.of(20))
-            }
-            gradleVersions {
-                compatibleRange("8.3")
-            }
+            javaToolchain { languageVersion.set(JavaLanguageVersion.of(20)) }
+            gradleVersions { compatibleRange("8.3") }
         }
     }
 }
@@ -177,21 +157,21 @@ val ktfmt: Configuration by configurations.creating
 dependencies { ktfmt("com.facebook:ktfmt:0.44") }
 
 val ktfmtFormat by
-tasks.registering(JavaExec::class) {
-    val ktfmtArgs =
-        mutableListOf(
-            "--kotlinlang-style",
-            "--do-not-remove-unused-imports",
-            layout.projectDirectory.asFile.absolutePath,
-        )
-    if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
-    group = "formatting"
-    description = "Run ktfmt"
-    classpath = ktfmt
-    mainClass.set("com.facebook.ktfmt.cli.Main")
-    //        jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    args(ktfmtArgs)
-}
+    tasks.registering(JavaExec::class) {
+        val ktfmtArgs =
+            mutableListOf(
+                "--kotlinlang-style",
+                "--do-not-remove-unused-imports",
+                layout.projectDirectory.asFile.absolutePath,
+            )
+        if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
+        group = "formatting"
+        description = "Run ktfmt"
+        classpath = ktfmt
+        mainClass.set("com.facebook.ktfmt.cli.Main")
+        //        jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+        args(ktfmtArgs)
+    }
 
 val check = tasks.named("check") { dependsOn(ktfmtFormat) }
 
@@ -245,15 +225,21 @@ tasks.withType<PublishTask>().configureEach {
     onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
 }
 
-fun buildTestMatrixMarkdown(matrixFile : File) : String {
+fun buildTestMatrixMarkdown(matrixFile: File): String {
     return matrixFile.bufferedReader().use {
         val props = Properties()
         props.load(it)
-        val keys = props.keys.map(Any::toString).map { it to it.removePrefix("java").toInt() }.sortedBy { it.second }
-        val tableRows = keys.map {versionPair ->
-            val gradleVersions = props[versionPair.first]?.toString()?.split(",")?.joinToString(", ")
-            "| Java ${versionPair.second} | Gradle $gradleVersions |\n"
-        }
+        val keys =
+            props.keys
+                .map(Any::toString)
+                .map { it to it.removePrefix("java").toInt() }
+                .sortedBy { it.second }
+        val tableRows =
+            keys.map { versionPair ->
+                val gradleVersions =
+                    props[versionPair.first]?.toString()?.split(",")?.joinToString(", ")
+                "| Java ${versionPair.second} | Gradle $gradleVersions |\n"
+            }
         "| Java Version | Gradle Version |\n| --- | --- |\n" + tableRows.joinToString("\n")
     }
 }

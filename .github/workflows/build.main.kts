@@ -14,73 +14,75 @@ import io.github.typesafegithub.workflows.yaml.writeToFile
 val operatingSystems = listOf("ubuntu-latest", "macos-latest", "windows-latest")
 
 workflow(
-    name = "Build Gradle Release Plugin",
-    on = listOf(Push(), PullRequest()),
-    sourceFile = __FILE__.toPath(),
-    env =
-    linkedMapOf(
-        "GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED" to "false",
-        "ORG_GRADLE_PROJECT_signingKey" to expr("secrets.SIGNING_KEY"),
-        "ORG_GRADLE_PROJECT_signingPassword" to expr("secrets.SIGNING_PASSWORD"),
-        "ORG_GRADLE_PROJECT_sonatypeUsername" to expr("secrets.SONATYPEUSERNAME"),
-        "ORG_GRADLE_PROJECT_sonatypePassword" to expr("secrets.SONATYPEPASSWORD"),
-        "GRADLE_PUBLISH_KEY" to expr("secrets.PLUGIN_PORTAL_KEY"),
-        "GRADLE_PUBLISH_SECRET" to expr("secrets.PLUGIN_PORTAL_SECRET"),
-    ),
-) {
-    val test = job(
-        id = "test", name = """Test on ${expr("matrix.os")}""",
-        runsOn = RunnerType.Custom(expr("matrix.os")),
-        _customArguments = mapOf("strategy" to mapOf("matrix" to mapOf("os" to operatingSystems))),
+        name = "Build Gradle Release Plugin",
+        on = listOf(Push(), PullRequest()),
+        sourceFile = __FILE__.toPath(),
+        env =
+            linkedMapOf(
+                "GRADLE_BUILD_ACTION_CACHE_DEBUG_ENABLED" to "false",
+                "ORG_GRADLE_PROJECT_signingKey" to expr("secrets.SIGNING_KEY"),
+                "ORG_GRADLE_PROJECT_signingPassword" to expr("secrets.SIGNING_PASSWORD"),
+                "ORG_GRADLE_PROJECT_sonatypeUsername" to expr("secrets.SONATYPEUSERNAME"),
+                "ORG_GRADLE_PROJECT_sonatypePassword" to expr("secrets.SONATYPEPASSWORD"),
+                "GRADLE_PUBLISH_KEY" to expr("secrets.PLUGIN_PORTAL_KEY"),
+                "GRADLE_PUBLISH_SECRET" to expr("secrets.PLUGIN_PORTAL_SECRET"),
+            ),
     ) {
-        uses(name = "Checkout", action = CheckoutV3())
-        uses(
-            name = "Set up JDK",
-            action =
-            SetupJavaV3(
-                javaVersion = "17",
-                distribution = SetupJavaV3.Distribution.Temurin,
-                checkLatest = true,
-            ),
-        )
-        uses(
-            name = "Test",
-            action =
-            GradleBuildActionV2(
-                gradleVersion = "wrapper",
-                gradleHomeCacheCleanup = true,
-                gradleHomeCacheIncludes = listOf("jdks", "caches", "notifications"),
-                arguments =
-                "build compatTest --info --scan --stacktrace",
-            ),
-        )
+        val test =
+            job(
+                id = "test",
+                name = """Test on ${expr("matrix.os")}""",
+                runsOn = RunnerType.Custom(expr("matrix.os")),
+                _customArguments =
+                    mapOf("strategy" to mapOf("matrix" to mapOf("os" to operatingSystems))),
+            ) {
+                uses(name = "Checkout", action = CheckoutV3())
+                uses(
+                    name = "Set up JDK",
+                    action =
+                        SetupJavaV3(
+                            javaVersion = "17",
+                            distribution = SetupJavaV3.Distribution.Temurin,
+                            checkLatest = true,
+                        ),
+                )
+                uses(
+                    name = "Test",
+                    action =
+                        GradleBuildActionV2(
+                            gradleVersion = "wrapper",
+                            gradleHomeCacheCleanup = true,
+                            gradleHomeCacheIncludes = listOf("jdks", "caches", "notifications"),
+                            arguments = "build compatTest --info --scan --stacktrace",
+                        ),
+                )
+            }
+        job(
+            id = "publish",
+            needs = listOf(test),
+            runsOn = RunnerType.UbuntuLatest,
+        ) {
+            uses(name = "Checkout", action = CheckoutV3())
+            uses(
+                name = "Set up JDK",
+                action =
+                    SetupJavaV3(
+                        javaVersion = "17",
+                        distribution = SetupJavaV3.Distribution.Temurin,
+                        checkLatest = true,
+                    ),
+            )
+            uses(
+                name = "Build",
+                action =
+                    GradleBuildActionV2(
+                        gradleVersion = "wrapper",
+                        gradleHomeCacheCleanup = true,
+                        gradleHomeCacheIncludes = listOf("jdks", "caches", "notifications"),
+                        arguments =
+                            "build publishPlugins -Pgradle.publish.key=\$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=\$GRADLE_PUBLISH_SECRET --info --scan --stacktrace --no-configuration-cache",
+                    ),
+            )
+        }
     }
-    job(
-        id = "publish",
-        needs = listOf(test),
-        runsOn = RunnerType.UbuntuLatest,
-    ) {
-        uses(name = "Checkout", action = CheckoutV3())
-        uses(
-            name = "Set up JDK",
-            action =
-            SetupJavaV3(
-                javaVersion = "17",
-                distribution = SetupJavaV3.Distribution.Temurin,
-                checkLatest = true,
-            ),
-        )
-        uses(
-            name = "Build",
-            action =
-            GradleBuildActionV2(
-                gradleVersion = "wrapper",
-                gradleHomeCacheCleanup = true,
-                gradleHomeCacheIncludes = listOf("jdks", "caches", "notifications"),
-                arguments =
-                "build publishPlugins -Pgradle.publish.key=\$GRADLE_PUBLISH_KEY -Pgradle.publish.secret=\$GRADLE_PUBLISH_SECRET --info --scan --stacktrace --no-configuration-cache",
-            ),
-        )
-    }
-}
     .writeToFile()
