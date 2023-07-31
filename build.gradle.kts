@@ -62,9 +62,10 @@ tasks.withType<ValidatePlugins>().configureEach {
     failOnWarning.set(true)
 }
 
-tasks.withType<KotlinCompile>().configureEach {
+java { toolchain { languageVersion.set(JavaLanguageVersion.of(8)) } }
+
+tasks.named<KotlinCompile>("compileKotlin") {
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
         // language version must match the earliest supported Gradle version
         apiVersion = "1.4"
         languageVersion = "1.4"

@@ -23,12 +23,12 @@ plugins {
 
 The plugin is currently compatible with:
 
-| Plugin version | Gradle version |  
-| --- |------------------------------------------------------------------------|
-| < 1.0 | 8.0.x (Java 11 - 19)<br/>8.1.x (Java 11 - 19)<br/>8.2.x (Java 11 - 19) |
+| Plugin version | Gradle version                                                      |  
+| --- |---------------------------------------------------------------------|
+| < 1.0 | 8.0.x (Java 8 - 19)<br/>8.1.x (Java 8 - 19)<br/>8.2.x (Java 8 - 19) |
 
 *See the [Gradle Compatibility Matrix](https://docs.gradle.org/current/userguide/compatibility.html#java) for what Java versions are supported for running Gradle (note: the Java version
-used to run Gradle is different than Toolchain version, if any).*
+used to run Gradle is different than specified Toolchain version, if any).*
 
 *As this plugin's test platform matures we may consider extending compatibility to
 older Gradle versions*
@@ -39,7 +39,11 @@ After installing the plugin simply run `./gradlew release` to execute the releas
 
 ## Configuration
 
-Configuration is via the `release` extension installed by the plugin:
+Configuration is via the `release` extension installed by the plugin; the default configuration is below.
+
+It is not necessary to configure the `release` extension if the defaults are satisfactory.
+
+Default configuration:
 
 *when using Gradle Kotlin DSL on Gradle < 8.2 replace assignment `=` with `.set`*
 
@@ -53,18 +57,9 @@ release {
         propertyName = "version"
     }
     
-    git {
-        // Whether to sign git tags
-        signTag = false
-        
+    preReleaseChecks {
         // regex for branches which releases must be done off of.  Set to empty string to ignore.
         releaseBranchPattern = "main"
-        
-        // list of options used for git commit, e.g. '-s'
-        commitOptions = emptyList()
-        
-        // list of options used for git push, e.g. '--no-verify'
-        pushOptions = emptyList()
 
         // whether to fail the release if there are unstaged files
         failOnUnstagedFiles = true
@@ -77,6 +72,17 @@ release {
 
         // whether to fail the release if there are commits to be pulled
         failOnPullNeeded = true
+    }
+    
+    gitSettings {
+        // Whether to sign git tags
+        signTag = false
+        
+        // list of options used for git commit, e.g. '-s'
+        commitOptions = emptyList()
+        
+        // list of options used for git push, e.g. '--no-verify'
+        pushOptions = emptyList()
     }
     
     // template for release commit message

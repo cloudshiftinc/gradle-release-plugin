@@ -1,9 +1,8 @@
 package io.cloudshiftdev.gradle.release
 
-import io.cloudshiftdev.gradle.release.GitRepository.GitStatus.Uncommitted
-import io.cloudshiftdev.gradle.release.GitRepository.GitStatus.Untracked
+import io.cloudshiftdev.gradle.release.GitRepository.PathStatus.Uncommitted
+import io.cloudshiftdev.gradle.release.GitRepository.PathStatus.Untracked
 import io.cloudshiftdev.gradle.release.util.releasePluginError
-import io.cloudshiftdev.gradle.release.util.warningOrError
 import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.inject.Inject
@@ -21,7 +20,7 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
 
     internal interface Params : BuildServiceParameters {
         val projectDir: DirectoryProperty
-        val gitSettings: Property<ReleaseExtension.Git>
+        val gitSettings: Property<ReleaseExtension.GitSettings>
     }
 
     private object GitCommands {
@@ -42,7 +41,6 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
                 ?: releasePluginError("Git repository not found")
 
         verifyGitRepoExists()
-        verifyReleaseBranch()
     }
 
     private fun findGitDirectory(dir: File): File? {
@@ -59,76 +57,50 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
             releasePluginError("Git repository is empty; please commit something first")
     }
 
-    private fun verifyReleaseBranch() {
-        val patternStr = parameters.gitSettings.get().releaseBranchPattern.get()
-        if (patternStr.isBlank()) return
-
+    fun currentBranch(): String {
         val cmdResult = git(GitCommands.CurrentBranch)
-        val currentBranch =
-            cmdResult.outputLines.firstOrNull()
-                ?: releasePluginError("Unable to determine current branch")
-        logger.info("Currently on branch $currentBranch")
-        val pattern = Regex(patternStr)
-        pattern.matchEntire(currentBranch)
-            ?: releasePluginError(
-                "Currently on branch ${currentBranch}; required branches for release: $patternStr"
-            )
+        return cmdResult.outputLines.firstOrNull()
+            ?: releasePluginError("Unable to determine current branch")
     }
 
-    fun checkCommitNeeded() {
+    fun status(): List<StatusPath> {
         val statusResult = git("status", "--porcelain")
-        val status =
-            statusResult.outputLines.groupBy {
-                when {
-                    it.trim().startsWith("??") -> Untracked
+        return statusResult.outputLines.map {
+            val pieces = it.split(" ", limit = 2)
+            check(pieces.size == 2) { "Malformed git status line: $it" }
+            val status =
+                when (pieces[0]) {
+                    "??" -> Untracked
                     else -> Uncommitted
                 }
-            }
-        val untracked = status[Untracked] ?: emptyList()
-        val uncommitted = status[Uncommitted] ?: emptyList()
-
-        when {
-            untracked.isNotEmpty() ->
-                warningOrError(
-                    gitSettings().failOnUntrackedFiles.get(),
-                    "You have untracked files:\n${untracked.joinToString("\n")}"
-                )
-            uncommitted.isNotEmpty() ->
-                warningOrError(
-                    gitSettings().failOnUncommittedFiles.get(),
-                    "You have uncommitted files:\n${uncommitted.joinToString("\n")}"
-                )
+            StatusPath(path = pieces[1], status = status, statusIndicator = pieces[0])
         }
     }
 
-    private enum class GitStatus {
-        Untracked,
-        Uncommitted
-    }
-
-    private fun gitSettings() = parameters.gitSettings.get()
-
-    fun checkUpdatedNeeded() {
-
+    fun remoteStatus(): RemoteStatus {
         git("remote", "update")
 
         val behind =
             git("rev-list", "--count", "HEAD..@{upstream}", "--").outputLines.first().toInt()
         val ahead = git("rev-list", "--count", "@{upstream}..HEAD").outputLines.first().toInt()
 
-        when {
-            ahead > 0 ->
-                warningOrError(
-                    gitSettings().failOnPushNeeded.get(),
-                    "You have $ahead change(s) to push."
-                )
-            behind > 0 ->
-                warningOrError(
-                    gitSettings().failOnPullNeeded.get(),
-                    "You have $behind change(s) to pull."
-                )
+        return RemoteStatus(commitsAhead = ahead, commitsBehind = behind)
+    }
+
+    data class RemoteStatus(val commitsAhead: Int, val commitsBehind: Int)
+
+    data class StatusPath(val path: String, val status: PathStatus, val statusIndicator: String) {
+        override fun toString(): String {
+            return "$statusIndicator $path"
         }
     }
+
+    enum class PathStatus {
+        Untracked,
+        Uncommitted
+    }
+
+    private fun gitSettings() = parameters.gitSettings.get()
 
     fun stageFiles() {
         git("add", ".")

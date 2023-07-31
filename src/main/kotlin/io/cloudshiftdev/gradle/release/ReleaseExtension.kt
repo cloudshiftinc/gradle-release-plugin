@@ -11,6 +11,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.newInstance
 
 public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactory) {
@@ -99,13 +100,13 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
         preReleaseHooks.add(PreReleaseHookSpec(clazz = type, parameters))
     }
 
-    public val git: Git = objects.newInstance<Git>()
+    internal val gitSettings: GitSettings = objects.newInstance<GitSettings>()
 
-    public fun git(action: Action<Git>) {
-        action.execute(git)
+    public fun gitSettings(action: Action<GitSettings>) {
+        action.execute(gitSettings)
     }
 
-    public abstract class Git {
+    public abstract class GitSettings {
 
         /**
          * Whether to sign git tags.
@@ -113,13 +114,6 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
          * Default: **false**
          */
         public abstract val signTag: Property<Boolean>
-
-        /**
-         * Regex for branches which releases must be done off of. Set to empty string to ignore.
-         *
-         * Default: **main**
-         */
-        public abstract val releaseBranchPattern: Property<String>
 
         /**
          * List of options to use during a commit, e.g. '-s'
@@ -134,34 +128,50 @@ public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactor
          * Default: **<empty>**
          */
         public abstract val pushOptions: ListProperty<String>
+    }
 
+    internal val preReleaseChecks: PreReleaseChecks = objects.newInstance<PreReleaseChecks>()
+
+    public fun preReleaseChecks(action: Action<PreReleaseChecks>) {
+        action.execute(preReleaseChecks)
+    }
+
+    // properties annotated w/ @get:Input as this object is passed into [DefaultPreReleaseChecks]
+    public abstract class PreReleaseChecks {
         /**
          * Whether to fail the release if there are untracked (unstaged) files.
          *
          * Default: **true**
          */
-        public abstract val failOnUntrackedFiles: Property<Boolean>
+        @get:Input public abstract val failOnUntrackedFiles: Property<Boolean>
 
         /**
          * Whether to fail the release if there are uncommitted (staged) files.
          *
          * Default: **true**
          */
-        public abstract val failOnUncommittedFiles: Property<Boolean>
+        @get:Input public abstract val failOnUncommittedFiles: Property<Boolean>
 
         /**
          * Whether to fail the release if there are commits to be pushed.
          *
          * Default: **true**
          */
-        public abstract val failOnPushNeeded: Property<Boolean>
+        @get:Input public abstract val failOnPushNeeded: Property<Boolean>
 
         /**
          * Whether to fail the release if there are commits to be pulled.
          *
          * Default: **true**
          */
-        public abstract val failOnPullNeeded: Property<Boolean>
+        @get:Input public abstract val failOnPullNeeded: Property<Boolean>
+
+        /**
+         * Regex for branches which releases must be done off of. Set to empty string to ignore.
+         *
+         * Default: **main**
+         */
+        @get:Input public abstract val releaseBranchPattern: Property<String>
     }
 }
 

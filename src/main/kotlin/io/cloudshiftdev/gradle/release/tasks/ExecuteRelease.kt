@@ -50,9 +50,6 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
     public fun action() {
         val git = gitRepository.get()
 
-        git.checkCommitNeeded()
-        git.checkUpdatedNeeded()
-
         val versions = incrementVersion {
             // TODO - configuration for which to increment
             it.nextPatch()

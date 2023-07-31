@@ -3,6 +3,7 @@
 package io.cloudshiftdev.gradle.release
 
 import io.cloudshiftdev.gradle.release.tasks.AbstractReleaseTask
+import io.cloudshiftdev.gradle.release.tasks.DefaultPreReleaseChecks
 import io.cloudshiftdev.gradle.release.tasks.ExecuteRelease
 import io.cloudshiftdev.gradle.release.util.releasePluginError
 import org.gradle.api.JavaVersion
@@ -10,14 +11,22 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.Logging
 import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.getValue
-import org.gradle.kotlin.dsl.provideDelegate
+import org.gradle.kotlin.dsl.register
 import org.gradle.kotlin.dsl.registerIfAbsent
-import org.gradle.kotlin.dsl.registering
 import org.gradle.kotlin.dsl.withType
 import org.gradle.util.GradleVersion
 
 public abstract class ReleasePlugin : Plugin<Project> {
+    public companion object {
+        public const val PluginId: String = PluginSpec.Id
+
+        public const val PreReleaseChecksTaskName: String = "preReleaseChecks"
+        public const val PreReleaseTaskName: String = "preRelease"
+        public const val ReleaseTaskName: String = "release"
+
+        private const val DefaultPreReleaseChecksTaskName: String = "defaultPreReleaseChecks"
+        private const val ExecuteReleaseTaskName: String = "executeRelease"
+    }
 
     override fun apply(project: Project): Unit =
         project.run {
@@ -25,29 +34,51 @@ public abstract class ReleasePlugin : Plugin<Project> {
 
             val releaseExtension = createReleaseExtension()
 
-            val gitRepositoryService =
+            // register this as a project-scoped service (by encoding project path in the service
+            // name)
+            // such that we can benefit from all the service-management infra (lazy-instiation,
+            // lifecycle management, etc)
+            val gitRepository =
                 gradle.sharedServices.registerIfAbsent(
                     "${PluginSpec.Id}-${project.path}",
-                    GitRepository::class
+                    GitRepository::class,
                 ) {
                     parameters {
                         projectDir.set(layout.projectDirectory)
-                        gitSettings.set(releaseExtension.git)
+                        gitSettings.set(releaseExtension.gitSettings)
                     }
                 }
 
+            val releaseGroup = "release"
+            val releaseImplGroup = "_release-impl"
+
             // configure all release tasks (this catches tasks added later)
             tasks.withType<AbstractReleaseTask>().configureEach {
-                gitRepository.set(gitRepositoryService)
-                group = "release"
+                this.gitRepository.set(gitRepository)
             }
 
-            val checkRelease by tasks.registering
+            val defaultPreReleaseChecks =
+                tasks.register<DefaultPreReleaseChecks>(DefaultPreReleaseChecksTaskName) {
+                    group = releaseImplGroup
+                    preReleaseChecks.set(releaseExtension.preReleaseChecks)
+                }
 
-            val preRelease by tasks.registering { dependsOn(checkRelease) }
+            val preReleaseChecks =
+                tasks.register(PreReleaseChecksTaskName) {
+                    group = releaseGroup
+                    dependsOn(defaultPreReleaseChecks)
+                }
 
-            val executeRelease by
-                tasks.registering(ExecuteRelease::class) {
+            val preRelease =
+                tasks.register(PreReleaseTaskName) {
+                    group = releaseGroup
+                    dependsOn(preReleaseChecks)
+                    mustRunAfter(preReleaseChecks)
+                }
+
+            val executeRelease =
+                tasks.register<ExecuteRelease>(ExecuteReleaseTaskName) {
+                    group = releaseImplGroup
                     mustRunAfter(preRelease)
 
                     versionPropertiesFile.set(releaseExtension.versionProperties.propertiesFile)
@@ -64,11 +95,11 @@ public abstract class ReleasePlugin : Plugin<Project> {
                     preReleaseHooks.set(releaseExtension.preReleaseHooks)
                 }
 
-            val release by
-                tasks.registering {
-                    dependsOn(preRelease)
-                    dependsOn(executeRelease)
-                }
+            tasks.register(ReleaseTaskName) {
+                group = releaseGroup
+                dependsOn(preRelease)
+                dependsOn(executeRelease)
+            }
         }
 
     private fun Project.createReleaseExtension(): ReleaseExtension {
@@ -80,8 +111,9 @@ public abstract class ReleasePlugin : Plugin<Project> {
                 propertyName.convention("version")
             }
 
-            git {
-                signTag.convention(false)
+            gitSettings { signTag.convention(false) }
+
+            preReleaseChecks {
                 releaseBranchPattern.convention("main")
                 failOnUntrackedFiles.convention(true)
                 failOnUncommittedFiles.convention(true)
@@ -119,20 +151,20 @@ internal fun checkPlatformCompatibility() {
                 // javaVersionRange = minimumJavaVersion..19),
                 GradleSupportSpec(
                     gradleVersion = GradleVersion.version("8.0"),
-                    javaVersionRange = minimumJavaVersion..19
+                    javaVersionRange = minimumJavaVersion..19,
                 ),
                 GradleSupportSpec(
                     gradleVersion = GradleVersion.version("8.1"),
-                    javaVersionRange = minimumJavaVersion..19
+                    javaVersionRange = minimumJavaVersion..19,
                 ),
                 GradleSupportSpec(
                     gradleVersion = GradleVersion.version("8.2"),
-                    javaVersionRange = minimumJavaVersion..19
+                    javaVersionRange = minimumJavaVersion..19,
                 ),
                 GradleSupportSpec(
                     gradleVersion = GradleVersion.version("8.3"),
-                    javaVersionRange = minimumJavaVersion..20
-                )
+                    javaVersionRange = minimumJavaVersion..20,
+                ),
             )
             .sortedBy { it.gradleVersion }
 
@@ -156,12 +188,12 @@ internal fun checkPlatformCompatibility() {
                 gradleVersion > lastSupportedVersion.gradleVersion -> {
                     val logger = Logging.getLogger("releasePluginPlatformSupport")
                     logger.warn(
-                        "[${PluginSpec.Id}] Gradle $gradleVersion is not formally supported by this version of the plugin (supported: Gradle $supportedGradleVersionRange"
+                        "[${PluginSpec.Id}] Gradle $gradleVersion is not formally supported by this version of the plugin (supported: Gradle $supportedGradleVersionRange",
                     )
                 }
                 else ->
                     releasePluginError(
-                        "Gradle $gradleVersion not supported; supported: Gradle $supportedGradleVersionRange"
+                        "Gradle $gradleVersion not supported; supported: Gradle $supportedGradleVersionRange",
                     )
             }
         }
@@ -169,7 +201,7 @@ internal fun checkPlatformCompatibility() {
             val javaVersion = JavaVersion.current().majorVersion.toInt()
             if (javaVersion !in gradleSupportSpec.javaVersionRange) {
                 releasePluginError(
-                    "Java $javaVersion is not supported for this Gradle version (supported Java versions are ${gradleSupportSpec.javaVersionRange}"
+                    "Java $javaVersion is not supported for this Gradle version (supported Java versions are ${gradleSupportSpec.javaVersionRange}",
                 )
             }
         }
