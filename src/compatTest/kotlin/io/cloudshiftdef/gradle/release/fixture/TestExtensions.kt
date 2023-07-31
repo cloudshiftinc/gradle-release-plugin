@@ -31,9 +31,20 @@ internal fun TestConfiguration.gradleTestEnvironment(
     ctx.git.push().call()
     model.setupSpecBlock?.invoke(ctx)
 
+    dumpWorkingDir(workingDir)
+
     val testKitDir = tempdir("testkit")
     val runner = model.gradleRunner.withProjectDir(workingDir).withTestKitDir(testKitDir)
     return TestEnvironment(runner = runner, git = ctx.git, workingDir = workingDir)
+}
+
+fun dumpWorkingDir(workingDir: File) {
+    println("Working directory $workingDir:")
+    workingDir.walk(FileWalkDirection.TOP_DOWN).forEach {
+        val relative = it.relativeTo(workingDir).toString()
+        if(relative.isBlank()) return@forEach
+        println("> $relative")
+    }
 }
 
 private fun writeGitIgnore(workingDir: File) {

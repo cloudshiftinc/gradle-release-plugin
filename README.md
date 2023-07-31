@@ -127,7 +127,7 @@ release {
 
 ## Test Matrix
 
-This plugin is tested against the below matrix of Java and Gradle versions.
+This plugin is tested against the below matrix of Java and Gradle versions, on Linux, MacOS and Windows.
 
 | Java Version | Gradle Version |
 | --- | --- |
