@@ -9,7 +9,6 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.Logging
-import org.gradle.kotlin.dsl.assign
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getValue
 import org.gradle.kotlin.dsl.provideDelegate
@@ -39,7 +38,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
 
             // configure all release tasks (this catches tasks added later)
             tasks.withType<AbstractReleaseTask>().configureEach {
-                gitRepository = gitRepositoryService
+                gitRepository.set(gitRepositoryService)
                 group = "release"
             }
 
@@ -51,18 +50,18 @@ public abstract class ReleasePlugin : Plugin<Project> {
                 tasks.registering(ExecuteRelease::class) {
                     mustRunAfter(preRelease)
 
-                    versionPropertiesFile = releaseExtension.versionProperties.propertiesFile
-                    versionPropertyName = releaseExtension.versionProperties.propertyName
+                    versionPropertiesFile.set(releaseExtension.versionProperties.propertiesFile)
+                    versionPropertyName.set(releaseExtension.versionProperties.propertyName)
 
-                    releaseCommitMessage = releaseExtension.releaseCommitMessage
+                    releaseCommitMessage.set(releaseExtension.releaseCommitMessage)
 
-                    versionTagTemplate = releaseExtension.versionTagTemplate
-                    versionTagCommitMessage = releaseExtension.versionTagCommitMessage
+                    versionTagTemplate.set(releaseExtension.versionTagTemplate)
+                    versionTagCommitMessage.set(releaseExtension.versionTagCommitMessage)
 
-                    incrementAfterRelease = releaseExtension.incrementAfterRelease
-                    newVersionCommitMessage = releaseExtension.newVersionCommitMessage
+                    incrementAfterRelease.set(releaseExtension.incrementAfterRelease)
+                    newVersionCommitMessage.set(releaseExtension.newVersionCommitMessage)
 
-                    preReleaseHooks = releaseExtension.preReleaseHooks
+                    preReleaseHooks.set(releaseExtension.preReleaseHooks)
                 }
 
             val release by

@@ -1,4 +1,5 @@
 import com.gradle.publish.PublishTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `kotlin-dsl`
@@ -11,15 +12,15 @@ plugins {
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
 
 gradlePlugin {
-    website = "https://github.com/cloudshiftinc/gradle-release-plugin"
-    vcsUrl = "https://github.com/cloudshiftinc/gradle-release-plugin"
+    website.set("https://github.com/cloudshiftinc/gradle-release-plugin")
+    vcsUrl.set("https://github.com/cloudshiftinc/gradle-release-plugin")
     plugins {
         create("cloudshiftRelease") {
             id = "io.cloudshiftdev.release"
             implementationClass = "io.cloudshiftdev.gradle.release.ReleasePlugin"
             displayName = "Gradle Release Plugin"
             description = project.description
-            tags = listOf("release", "version", "release management")
+            tags.set(listOf("release", "version", "release management"))
         }
     }
 }
@@ -56,11 +57,22 @@ tasks {
     //    }
 }
 
+tasks.withType<ValidatePlugins>().configureEach {
+    enableStricterValidation.set(true)
+    failOnWarning.set(true)
+}
+
+tasks.withType<KotlinCompile>().configureEach {
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
+        apiVersion = "1.4"
+        languageVersion = "1.4"
+    }
+}
+
 dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
-
-    implementation("org.apache.commons:commons-configuration2:2.9.0")
 
     // testing libraries
     testImplementation(platform(libs.junit.bom))
@@ -80,7 +92,7 @@ dependencies {
 
 tasks.named<Test>("test") { useJUnitPlatform() }
 
-val ktfmt by configurations.creating
+val ktfmt: Configuration by configurations.creating
 
 dependencies { ktfmt("com.facebook:ktfmt:0.44") }
 
@@ -115,7 +127,7 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 
 kotlin {
     explicitApi()
-    jvmToolchain { languageVersion = JavaLanguageVersion.of(11) }
+    jvmToolchain { languageVersion.set(JavaLanguageVersion.of(11)) }
 }
 
 signing {
