@@ -129,12 +129,12 @@ release {
 
 This plugin is tested against the below matrix of Java and Gradle versions, on Linux, MacOS and Windows.
 
+Tests are designed to validate against the Java LTS versions and leading-edge Gradle.
+
 | Java Version | Gradle Version |
 | --- | --- |
 | Java 8 | Gradle 7.0.2, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
 | Java 11 | Gradle 7.0.2, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
 | Java 17 | Gradle 7.3.3, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
-| Java 19 | Gradle 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
 | Java 20 | Gradle 8.3-rc-2 |
-
 

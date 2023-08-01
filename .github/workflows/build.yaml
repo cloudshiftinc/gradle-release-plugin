@@ -61,7 +61,7 @@ jobs:
           notifications
         arguments: 'build compatTest --info --scan --stacktrace'
         gradle-home-cache-cleanup: 'true'
-  publish:
+  release:
     runs-on: 'ubuntu-latest'
     needs:
     - 'test'
@@ -78,7 +78,7 @@ jobs:
         distribution: 'temurin'
         check-latest: 'true'
     - id: 'step-2'
-      name: 'Build'
+      name: 'Release'
       uses: 'gradle/gradle-build-action@v2'
       with:
         gradle-version: 'wrapper'

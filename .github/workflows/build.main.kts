@@ -58,7 +58,7 @@ workflow(
                 )
             }
         job(
-            id = "publish",
+            id = "release",
             needs = listOf(test),
             runsOn = RunnerType.UbuntuLatest,
         ) {
@@ -73,7 +73,7 @@ workflow(
                     ),
             )
             uses(
-                name = "Build",
+                name = "Release",
                 action =
                     GradleBuildActionV2(
                         gradleVersion = "wrapper",

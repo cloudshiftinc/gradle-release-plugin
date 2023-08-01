@@ -32,8 +32,8 @@ gradlePlugin {
 stutter {
     sparse.set(true)
     matrices {
-        // cover off Java LTS releases (8, 11, 17) and the max supported by Gradle (19, 20)
-        listOf("7.0" to 8, "7.0" to 11, "7.3" to 17, "7.6" to 19, "8.3" to 20).forEach {
+        // cover off Java LTS releases (8, 11, 17) and leading edge (Gradle 8.3 / Java 20)
+        listOf("7.0" to 8, "7.0" to 11, "7.3" to 17, "8.3" to 20).forEach {
             create("java${it.second}") {
                 javaToolchain { languageVersion.set(JavaLanguageVersion.of(it.second)) }
                 gradleVersions { compatibleRange(it.first) }
@@ -207,6 +207,8 @@ tasks.withType<PublishTask>().configureEach {
     onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
 }
 
+println(buildTestMatrixMarkdown(file("stutter.lockfile")))
+
 fun buildTestMatrixMarkdown(matrixFile: File): String {
     return matrixFile.bufferedReader().use {
         val props = Properties()
@@ -220,7 +222,7 @@ fun buildTestMatrixMarkdown(matrixFile: File): String {
             keys.map { versionPair ->
                 val gradleVersions =
                     props[versionPair.first]?.toString()?.split(",")?.joinToString(", ")
-                "| Java ${versionPair.second} | Gradle $gradleVersions |\n"
+                "| Java ${versionPair.second} | Gradle $gradleVersions |"
             }
         "| Java Version | Gradle Version |\n| --- | --- |\n" + tableRows.joinToString("\n")
     }
