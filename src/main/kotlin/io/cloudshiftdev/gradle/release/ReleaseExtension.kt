@@ -1,4 +1,4 @@
-@file:Suppress("KDocUnresolvedReference")
+@file:Suppress("KDocUnresolvedReference", "LeakingThis")
 
 package io.cloudshiftdev.gradle.release
 
@@ -7,14 +7,19 @@ import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import javax.inject.Inject
 import kotlin.reflect.KClass
 import org.gradle.api.Action
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.newInstance
 
-public abstract class ReleaseExtension @Inject constructor(objects: ObjectFactory) {
+public abstract class ReleaseExtension @Inject constructor(internal val objects: ObjectFactory) {
 
     /**
      * Template for release commit message.
@@ -186,7 +191,7 @@ internal class PreReleaseHookSpec<T : PreReleaseHook>(
  * Commonly used to insert version number into documentation files, such as README.md.
  */
 public fun ReleaseExtension.preProcessFiles(action: Action<PreProcessFilesDsl>) {
-    val dsl = PreProcessFilesDsl()
+    val dsl = objects.newInstance<PreProcessFilesDsl>()
     action.execute(dsl)
 
     val templateSpecs = dsl.templateSpecs
@@ -195,14 +200,19 @@ public fun ReleaseExtension.preProcessFiles(action: Action<PreProcessFilesDsl>) 
     preReleaseHook<PreProcessFilesHook>(templateSpecs, replacementSpecs)
 }
 
-public class PreProcessFilesDsl {
+public abstract class PreProcessFilesDsl
+@Inject
+constructor(private val objects: ObjectFactory, private val layout: ProjectLayout) {
 
     internal val templateSpecs = mutableListOf<PreProcessFilesHook.TemplateSpec>()
     internal val replacementSpecs = mutableListOf<PreProcessFilesHook.ReplacementSpec>()
 
-    /**  */
-    public fun templates(sourceDir: Any, destinationDir: Any, action: Action<TemplateDsl>) {
-        val dsl = TemplateDsl(sourceDir, destinationDir)
+    public fun templates(
+        destinationDir: Directory = layout.projectDirectory,
+        action: Action<TemplateDsl>
+    ) {
+        val dsl = objects.newInstance<TemplateDsl>()
+        dsl.destinationDir.set(destinationDir)
         action.execute(dsl)
         templateSpecs.add(dsl.build())
     }
@@ -214,20 +224,36 @@ public class PreProcessFilesDsl {
         replacementSpecs.add(dsl.build())
     }
 
-    public class TemplateDsl(private val sourceDir: Any, private val destinationDir: Any) {
-        private var preventTampering: Boolean = true
-        private val includes = mutableListOf<String>()
-        private val excludes = mutableListOf<String>()
-        private val properties = mutableMapOf<String, String>()
+    public abstract class TemplateDsl {
+        internal abstract val destinationDir: DirectoryProperty
+        internal abstract val preventTampering: Property<Boolean>
+        internal abstract val includes: ListProperty<String>
+        internal abstract val excludes: ListProperty<String>
+        internal abstract val properties: MapProperty<String, String>
 
+        init {
+            preventTampering.convention(true)
+        }
         /**  */
         public fun includes(vararg pattern: String) {
-            includes.addAll(pattern)
+            includes.addAll(pattern.toList())
         }
 
         /**  */
         public fun excludes(vararg pattern: String) {
-            excludes.addAll(pattern)
+            excludes.addAll(pattern.toList())
+        }
+
+        public fun property(key: String, value: String) {
+            properties.put(key, value)
+        }
+
+        public fun property(key: String, value: Provider<String>) {
+            properties.put(key, value)
+        }
+
+        public fun properties(map: Map<String, String>) {
+            properties.putAll(map)
         }
 
         /**
@@ -237,12 +263,11 @@ public class PreProcessFilesDsl {
          * Call `allowTampering` to disable this check.
          */
         public fun allowTampering() {
-            preventTampering = false
+            preventTampering.set(false)
         }
 
         internal fun build(): PreProcessFilesHook.TemplateSpec {
             return PreProcessFilesHook.TemplateSpec(
-                templateDir = sourceDir,
                 destinationDir = destinationDir,
                 preventTampering = preventTampering,
                 includes = includes,

@@ -6,13 +6,15 @@ import com.google.common.hash.Hashing
 import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import io.github.z4kn4fein.semver.Version
 import java.io.File
-import java.util.UUID
+import java.util.*
 import javax.inject.Inject
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.ProjectLayout
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Provider
 
 internal abstract class PreProcessFilesHook
 @Inject
@@ -56,33 +58,44 @@ constructor(
     }
 
     private fun processTemplateSpecs(currentVersion: Version) {
+        check(
+            templateSpecs.all { it.includes.get().isNotEmpty() },
+        ) {
+            "Template spec must contain includes"
+        }
+
         templateSpecs.forEach { templateSpec ->
-            val sourceFileTree = objects.fileTree().from(templateSpec.templateDir)
+            val sourceFileTree = objects.fileTree().from(layout.projectDirectory)
             val sourceDir = sourceFileTree.dir
             val destDir = objects.fileTree().from(templateSpec.destinationDir).dir
 
             val sourceFiles =
                 sourceFileTree.matching {
-                    include(templateSpec.includes)
-                    exclude(templateSpec.excludes)
+                    include(templateSpec.includes.get())
+                    exclude(templateSpec.excludes.get())
                     exclude("**/*.sha256")
                 }
 
-            checkTampering(templateSpec.preventTampering, sourceFiles, sourceDir, destDir)
+            checkTampering(templateSpec.preventTampering.get(), sourceFiles, sourceDir, destDir)
 
             fs.copy {
                 from(sourceFiles)
                 into(destDir)
 
                 val properties =
-                    mapOf("version" to currentVersion.toString()) + templateSpec.properties
+                    mapOf("version" to currentVersion.toString()) + templateSpec.properties.get()
                 expand(properties)
                 eachFile { logger.info("Processing template $path") }
             }
 
             // put sha256 of expanded content in .sha256 file alongside template, for validation on
             // subsequent releases
-            writeTamperChecksum(templateSpec.preventTampering, sourceFiles, sourceDir, destDir)
+            writeTamperChecksum(
+                templateSpec.preventTampering.get(),
+                sourceFiles,
+                sourceDir,
+                destDir,
+            )
         }
     }
 
@@ -130,12 +143,11 @@ constructor(
     private fun File.sha256() = Hashing.sha256().newHasher().putBytes(readBytes()).hash().toString()
 
     data class TemplateSpec(
-        val templateDir: Any,
-        val destinationDir: Any,
-        val preventTampering: Boolean,
-        val includes: List<String>,
-        val excludes: List<String>,
-        val properties: Map<String, String>
+        val destinationDir: DirectoryProperty,
+        val preventTampering: Provider<Boolean>,
+        val includes: Provider<List<String>>,
+        val excludes: Provider<List<String>>,
+        val properties: Provider<Map<String, String>>
     )
 
     data class ReplacementSpec(
