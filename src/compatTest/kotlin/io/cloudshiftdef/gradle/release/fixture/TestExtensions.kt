@@ -30,8 +30,7 @@ internal fun TestConfiguration.gradleTestEnvironment(
 
     dumpWorkingDir(workingDir)
 
-    val testKitDir = tempdir("testkit")
-    val runner = model.gradleRunner.withProjectDir(workingDir).withTestKitDir(testKitDir)
+    val runner = model.gradleRunner.withProjectDir(workingDir)
     return TestEnvironment(runner = runner, workingDir = workingDir)
 }
 

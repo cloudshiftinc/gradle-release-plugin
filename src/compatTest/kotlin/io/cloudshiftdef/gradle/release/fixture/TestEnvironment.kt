@@ -50,7 +50,7 @@ internal fun execGit(workingDir: File, vararg args: String): ExecOutput {
     env.clear()
     env["GIT_TRACE"] = "1"
 
-    println("[test setup] executing ${commandLine.joinToString(" ")} in ${workingDir.name}")
+    println("[test fixtures] executing ${commandLine.joinToString(" ")} in ${workingDir.name}")
     val process = builder.start()
     val br = BufferedReader(InputStreamReader(process.inputStream))
     var line: String?

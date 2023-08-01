@@ -133,6 +133,11 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
     systemProperty("kotest.framework.dump.config", "true")
+    systemProperty(
+        "org.gradle.testkit.dir",
+        layout.projectDirectory.dir("build/test-kit").asFile.toString()
+    )
+
     useJUnitPlatform()
     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
     testLogging {
