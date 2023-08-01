@@ -3,12 +3,11 @@ package io.cloudshiftdef.gradle.release.fixture
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
-import java.util.Properties
-import org.eclipse.jgit.api.Git
+import java.util.*
 import org.gradle.api.GradleException
 import org.gradle.testkit.runner.GradleRunner
 
-internal data class TestEnvironment(val runner: GradleRunner, val git: Git, val workingDir: File)
+internal data class TestEnvironment(val runner: GradleRunner, val workingDir: File)
 
 internal fun TestEnvironment.gitLog(refSpec: String = ""): List<String> {
     return execGit("log", "--oneline", "--no-color", refSpec).lines.map {
@@ -36,6 +35,10 @@ internal fun TestEnvironment.currentVersion(): String {
 }
 
 private fun TestEnvironment.execGit(vararg args: String): ExecOutput {
+    return execGit(workingDir, *args)
+}
+
+internal fun execGit(workingDir: File, vararg args: String): ExecOutput {
     val commandLine = mutableListOf("git")
     commandLine.addAll(args.toList())
 
@@ -47,6 +50,7 @@ private fun TestEnvironment.execGit(vararg args: String): ExecOutput {
     env.clear()
     env["GIT_TRACE"] = "1"
 
+    println("[test setup] executing ${commandLine.joinToString(" ")} in ${workingDir.name}")
     val process = builder.start()
     val br = BufferedReader(InputStreamReader(process.inputStream))
     var line: String?

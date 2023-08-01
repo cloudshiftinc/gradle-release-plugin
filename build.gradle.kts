@@ -127,7 +127,6 @@ dependencies {
     compatTestImplementation(libs.kotest.runner.junit5)
 
     compatTestImplementation(libs.jetbrains.kotlinx.datetime)
-    compatTestImplementation(libs.jgit)
 
     compatTestImplementation(gradleTestKit())
 }

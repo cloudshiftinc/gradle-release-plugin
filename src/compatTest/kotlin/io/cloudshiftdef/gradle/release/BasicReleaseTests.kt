@@ -31,7 +31,6 @@ class BasicReleaseTests : FunSpec() {
                     .gitLog()
                     .reversed()
                     .shouldContainInOrder(
-                        "Initial commit",
                         "Build setup",
                         "[Release] - release commit: 0.3.0-SNAPSHOT -> 0.3.0",
                         "[Release] - new version commit: 0.3.0 -> 0.3.1-SNAPSHOT"

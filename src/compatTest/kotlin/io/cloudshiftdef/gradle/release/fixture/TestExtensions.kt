@@ -4,8 +4,6 @@ import io.kotest.core.TestConfiguration
 import io.kotest.engine.spec.tempdir
 import java.io.File
 import kotlinx.datetime.Clock
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.ConfigConstants.CONFIG_USER_SECTION
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.util.GradleVersion
@@ -18,9 +16,8 @@ internal fun TestConfiguration.gradleTestEnvironment(
 
     val workingDir = tempdir("test-repo")
 
-    val git = createGitRepository(workingDir, tempdir("upstream-repo"))
-    autoClose(git)
-    val ctx = TestEnvironmentContext(workingDir, git)
+    createGitRepository(workingDir, tempdir("upstream-repo"))
+    val ctx = TestEnvironmentContext(workingDir)
 
     writeGitIgnore(workingDir)
     writeGradleProperties(workingDir, model.gradleProperties.properties)
@@ -28,14 +25,14 @@ internal fun TestConfiguration.gradleTestEnvironment(
     writeGradleBuild(workingDir, model.gradleBuild)
 
     ctx.stageAndCommit("Build setup")
-    ctx.git.push().call()
+    ctx.push()
     model.setupSpecBlock?.invoke(ctx)
 
     dumpWorkingDir(workingDir)
 
     val testKitDir = tempdir("testkit")
     val runner = model.gradleRunner.withProjectDir(workingDir).withTestKitDir(testKitDir)
-    return TestEnvironment(runner = runner, git = ctx.git, workingDir = workingDir)
+    return TestEnvironment(runner = runner, workingDir = workingDir)
 }
 
 fun dumpWorkingDir(workingDir: File) {
@@ -175,39 +172,32 @@ internal fun GradleRunner.releasePluginConfiguration() {
 
 private val ReleasePluginId = "id(\"io.cloudshiftdev.release\")"
 
-private fun createGitRepository(dir: File, upstreamRepositoryDir: File): Git {
+private fun createGitRepository(dir: File, upstreamRepositoryDir: File) {
     val upstreamUrl = upstreamRepositoryDir.toURI().toURL().toString().replace("file:/", "file:///")
 
     // create an upstream repo
     createUpstreamRepo(upstreamRepositoryDir)
-    val git = Git.cloneRepository().setURI(upstreamUrl).setDirectory(dir).call()
-
-    configureRepo(git)
+    execGit(dir, "clone", upstreamUrl, ".")
+    configureRepo(dir)
     println(
         "CONFIG: ${
             dir.resolve(".git/config")
                 .readText()
         }"
     )
-
-    return git
 }
 
-private fun configureRepo(git: Git) {
-    val config = git.repository.config
-    config.setString(CONFIG_USER_SECTION, null, "name", "Testing")
-    config.setString(CONFIG_USER_SECTION, null, "email", "testing@example.com")
-    config.save()
+private fun configureRepo(gitDir: File) {
+    execGit(gitDir, "config", "user.name", "Testing")
+    execGit(gitDir, "config", "user.email", "testing@exmaple.com")
 }
 
 private fun createUpstreamRepo(upstreamRepositoryDir: File) {
-    Git.init().setDirectory(upstreamRepositoryDir).setInitialBranch("main").call().use { git ->
-        configureRepo(git)
-        // dummy file for initial commit
-        upstreamRepositoryDir.resolve(".gitinit")
-        git.add().addFilepattern(".").call()
-        git.commit().setMessage("Initial commit").call()
-    }
+    execGit(upstreamRepositoryDir, "init", "--bare", "--initial-branch", "main")
+    configureRepo(upstreamRepositoryDir)
+    //    upstreamRepositoryDir.resolve(".gitinit").writeText("")
+    //    execGit(upstreamRepositoryDir, "add", ".")
+    //    execGit(upstreamRepositoryDir, "commit", "-m", "Initial commit [test repo]")
 }
 
 fun BuildResult.failed() = output.lines().any { it.startsWith("BUILD FAILED in") }
@@ -245,21 +235,23 @@ internal fun TestEnvironmentContext.testFiles(block: (TestFilesDsl).() -> Unit) 
 
 internal fun TestEnvironmentContext.stageAndCommit(message: String) {
     stageFiles()
-    println("Sample commit: $message")
-    git.commit { message(message) }
+    execGit(workingDir, "commit", "-m", message)
 }
 
-internal data class TestEnvironmentContext(val workingDir: File, val git: Git) {
+internal data class TestEnvironmentContext(val workingDir: File) {
     fun stageFiles() {
-        git.add().addFilepattern(".").call()
+        execGit(workingDir, "add", ".")
     }
 
     fun removeRepository() {
         workingDir.resolve(".git").deleteRecursively()
-        git.close()
     }
 
     fun createRepository() {
-        Git.init().setDirectory(workingDir).call()
+        execGit(workingDir, "init")
+    }
+
+    fun push() {
+        execGit(workingDir, "push")
     }
 }
