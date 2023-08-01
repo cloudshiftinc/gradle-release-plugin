@@ -14,9 +14,9 @@ internal fun TestConfiguration.gradleTestEnvironment(
     val model = TestEnvironmentDsl()
     model.apply(block)
 
-    val workingDir = tempdir("test-repo")
+    val workingDir = tempdir("test-repo-")
 
-    createGitRepository(workingDir, tempdir("upstream-repo"))
+    createGitRepository(workingDir, tempdir("upstream-repo-"))
     val ctx = TestEnvironmentContext(workingDir)
 
     writeGitIgnore(workingDir)

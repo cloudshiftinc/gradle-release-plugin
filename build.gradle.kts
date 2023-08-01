@@ -32,33 +32,12 @@ gradlePlugin {
 stutter {
     sparse.set(true)
     matrices {
-        val minGradleVersion = "7.0"
         // cover off Java LTS releases (8, 11, 17) and the max supported by Gradle (19, 20)
-        create("java8") {
-            javaToolchain { languageVersion.set(JavaLanguageVersion.of(8)) }
-            gradleVersions { compatibleRange(minGradleVersion) }
-        }
-        create("java11") {
-            javaToolchain { languageVersion.set(JavaLanguageVersion.of(11)) }
-            gradleVersions { compatibleRange(minGradleVersion) }
-        }
-
-        // Gradle 7.3 supports running on Java 17
-        create("java17") {
-            javaToolchain { languageVersion.set(JavaLanguageVersion.of(17)) }
-            gradleVersions { compatibleRange("7.3") }
-        }
-
-        // Gradle 7.6 supports running on Java 19
-        create("java19") {
-            javaToolchain { languageVersion.set(JavaLanguageVersion.of(19)) }
-            gradleVersions { compatibleRange("7.6") }
-        }
-
-        // Gradle 8.3 supports running on Java 20
-        create("java20") {
-            javaToolchain { languageVersion.set(JavaLanguageVersion.of(20)) }
-            gradleVersions { compatibleRange("8.3") }
+        listOf("7.0" to 8, "7.0" to 11, "7.3" to 17, "7.6" to 19, "8.3" to 20).forEach {
+            create("java${it.second}") {
+                javaToolchain { languageVersion.set(JavaLanguageVersion.of(it.second)) }
+                gradleVersions { compatibleRange(it.first) }
+            }
         }
     }
 }
@@ -135,7 +114,7 @@ tasks.withType<Test>().configureEach {
     systemProperty("kotest.framework.dump.config", "true")
     systemProperty(
         "org.gradle.testkit.dir",
-        layout.projectDirectory.dir("build/test-kit").asFile.toString()
+        layout.projectDirectory.dir("build/gradle-testkit").asFile.toString(),
     )
 
     useJUnitPlatform()
@@ -147,7 +126,7 @@ tasks.withType<Test>().configureEach {
                 TestLogEvent.PASSED,
                 TestLogEvent.SKIPPED,
                 TestLogEvent.STANDARD_OUT,
-                TestLogEvent.STANDARD_ERROR
+                TestLogEvent.STANDARD_ERROR,
             )
         exceptionFormat = TestExceptionFormat.FULL
         showExceptions = true
@@ -173,7 +152,6 @@ val ktfmtFormat by
         description = "Run ktfmt"
         classpath = ktfmt
         mainClass.set("com.facebook.ktfmt.cli.Main")
-        //        jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
         args(ktfmtArgs)
     }
 
@@ -191,7 +169,7 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 
 kotlin {
     explicitApi()
-    jvmToolchain { languageVersion.set(JavaLanguageVersion.of(11)) }
+    jvmToolchain { languageVersion.set(JavaLanguageVersion.of(8)) }
 }
 
 signing {
