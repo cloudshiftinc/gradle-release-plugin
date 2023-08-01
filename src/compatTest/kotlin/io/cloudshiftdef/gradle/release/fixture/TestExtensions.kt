@@ -45,6 +45,7 @@ fun dumpWorkingDir(workingDir: File) {
 
 private fun writeGitIgnore(workingDir: File) {
     val gitIgnoreFile = workingDir.resolve(".gitignore")
+
     val toIgnore = listOf(".gradle/", "build/")
     gitIgnoreFile.writeText(toIgnore.joinToString("\n"))
 }

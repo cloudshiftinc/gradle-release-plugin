@@ -8,9 +8,16 @@ plugins {
     `kotlin-dsl`
     id("com.gradle.plugin-publish") version "1.2.0"
     signing
+    //    id("test-report-aggregation")
+    //    `jvm-test-suite`
     id("org.ajoberstar.stutter") version "0.7.2"
     //    id("io.cloudshiftdev.release") version "0.1.20"
     //    alias(libs.plugins.release)
+}
+
+tasks.register("precommit") {
+    group = "verification"
+    dependsOn(check)
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
@@ -69,9 +76,7 @@ tasks {
             preprocessWorkflows { dependsOn(task) }
         }
 
-    //    named("precommit") {
-    //        dependsOn(preprocessWorkflows)
-    //    }
+    named("precommit") { dependsOn(preprocessWorkflows) }
 }
 
 tasks.withType<ValidatePlugins>().configureEach {
@@ -118,6 +123,12 @@ tasks.withType<Test>().configureEach {
     )
 
     useJUnitPlatform()
+
+    reports {
+        html.required.set(true)
+        junitXml.apply { required.set(true) }
+    }
+
     maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
     testLogging {
         events =
@@ -128,7 +139,7 @@ tasks.withType<Test>().configureEach {
                 TestLogEvent.STANDARD_OUT,
                 TestLogEvent.STANDARD_ERROR,
             )
-        exceptionFormat = TestExceptionFormat.FULL
+        exceptionFormat = TestExceptionFormat.SHORT
         showExceptions = true
         showCauses = true
         showStackTraces = true
@@ -156,11 +167,6 @@ val ktfmtFormat by
     }
 
 val check = tasks.named("check") { dependsOn(ktfmtFormat) }
-
-tasks.register("precommit") {
-    group = "verification"
-    dependsOn(check)
-}
 
 tasks.withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false

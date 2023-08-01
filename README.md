@@ -110,7 +110,7 @@ release {
             // patterns to include
             includes("**/*")
             
-            // pattern to exclude
+            // patterns to exclude
             excludes("")
         }
         
@@ -129,7 +129,7 @@ release {
 
 This plugin is tested against the below matrix of Java and Gradle versions, on Linux, MacOS and Windows.
 
-Tests are designed to validate against the Java LTS versions and leading-edge Gradle.
+Tests are designed to validate against Java LTS versions and leading-edge Java/Gradle versions.
 
 | Java Version | Gradle Version |
 | --- | --- |
