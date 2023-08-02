@@ -7,14 +7,14 @@ import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import io.cloudshiftdev.gradle.release.util.releasePluginError
 import io.github.z4kn4fein.semver.Version
+import java.io.File
+import javax.inject.Inject
 import org.gradle.api.Transformer
 import org.gradle.api.file.CopySpec
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.FileTree
 import org.gradle.api.provider.Provider
-import java.io.File
-import javax.inject.Inject
 
 internal abstract class TemplatesPreReleaseHook
 @Inject
