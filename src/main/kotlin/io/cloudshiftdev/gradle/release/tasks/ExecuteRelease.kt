@@ -141,6 +141,7 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         return Versions(previousVersion = currentVersion, version = nextVersion)
     }
 
+    @Internal
     override fun getLogger(): Logger {
         return ReleasePluginLogger.wrapLogger(super.getLogger())
     }

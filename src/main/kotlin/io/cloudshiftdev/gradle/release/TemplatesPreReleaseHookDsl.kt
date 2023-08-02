@@ -2,14 +2,13 @@
 
 package io.cloudshiftdev.gradle.release
 
+import io.cloudshiftdev.gradle.release.hooks.PathTransformer
 import io.cloudshiftdev.gradle.release.hooks.TemplatesPreReleaseHook
-import org.gradle.api.Transformer
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 
 @DslMarker public annotation class TemplatesPreReleaseHookDslMarker
 
@@ -17,13 +16,13 @@ import org.gradle.api.provider.Provider
 public abstract class TemplatesPreReleaseHookDsl {
     internal abstract var from: ConfigurableFileTree
     internal abstract val destinationDir: DirectoryProperty
-    internal abstract val properties: MapProperty<String, String>
+    internal abstract val properties: MapProperty<String, Any>
     internal abstract val preventTampering: Property<Boolean>
-    internal abstract val rename: Property<Transformer<String?, String>>
+    internal abstract val pathTransformer: Property<PathTransformer>
 
     init {
         preventTampering.convention(true)
-        rename.convention(Transformer { it })
+        pathTransformer.convention(PathTransformer { it })
     }
 
     public fun from(fileTree: ConfigurableFileTree) {
@@ -34,19 +33,15 @@ public abstract class TemplatesPreReleaseHookDsl {
         destinationDir.set(directory)
     }
 
-    public fun rename(transformer: Transformer<String?, String>) {
-        this.rename.set(transformer)
+    public fun pathTransformer(transformer: PathTransformer) {
+        this.pathTransformer.set(transformer)
     }
 
-    public fun property(key: String, value: String) {
+    public fun property(key: String, value: Any) {
         properties.put(key, value)
     }
 
-    public fun property(key: String, value: Provider<String>) {
-        properties.put(key, value)
-    }
-
-    public fun properties(map: Map<String, String>) {
+    public fun properties(map: Map<String, Any>) {
         properties.putAll(map)
     }
 
@@ -66,7 +61,7 @@ public abstract class TemplatesPreReleaseHookDsl {
             destinationDir = destinationDir,
             preventTampering = preventTampering,
             properties = properties,
-            rename = rename
+            pathTransformer = pathTransformer
         )
     }
 }

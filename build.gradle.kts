@@ -51,6 +51,7 @@ tasks.named<KotlinCompile>("compileKotlin") {
 dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
+    implementation("org.apache.velocity:velocity-engine-core:2.3")
 
     // testing libraries
     testImplementation(platform(libs.junit.bom))

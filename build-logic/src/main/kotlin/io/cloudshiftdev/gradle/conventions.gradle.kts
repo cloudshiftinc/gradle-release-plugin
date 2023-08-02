@@ -9,7 +9,7 @@ plugins {
     id("org.ajoberstar.stutter")
 }
 
-tasks.register("precommit") {
+val precommit = tasks.register("precommit") {
     group = "verification"
     dependsOn(tasks.named("check"))
 }
@@ -23,6 +23,10 @@ configure<StutterExtension> {
         java(17) { compatibleRange("7.3") }
         java(20) { compatibleRange("8.3") }
     }
+}
+
+precommit {
+    dependsOn("compatTestJava8Gradle7.0.2", "compatTestJava20Gradle8.3-rc-2")
 }
 
 // ensure Kotlin workflow scripts are executed to keep the generated yaml up-to-date
