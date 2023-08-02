@@ -1,6 +1,7 @@
 import com.gradle.publish.PublishTask
 import java.util.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.utils.extendsFrom
 
 plugins {
     `kotlin-dsl`
@@ -48,24 +49,27 @@ tasks.named<KotlinCompile>("compileKotlin") {
     }
 }
 
+configurations.compatTestImplementation.extendsFrom(configurations.testImplementation)
+
 dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
 
     // testing libraries
-    compatTestImplementation(platform(libs.junit.bom))
-    compatTestRuntimeOnly(platform(libs.junit.bom))
-    compatTestRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter.engine)
 
-    compatTestImplementation(platform(libs.kotest.bom))
-    compatTestImplementation(libs.kotest.assertions.core)
-    compatTestImplementation(libs.kotest.assertions.json)
-    compatTestImplementation(libs.kotest.framework.datatest)
-    compatTestImplementation(libs.kotest.property)
-    compatTestImplementation(libs.kotest.runner.junit5)
+    testImplementation(platform(libs.kotest.bom))
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.assertions.json)
+    testImplementation(libs.kotest.framework.datatest)
+    testImplementation(libs.kotest.property)
+    testImplementation(libs.kotest.runner.junit5)
 
-    compatTestImplementation(libs.jetbrains.kotlinx.datetime)
+    testImplementation(libs.jetbrains.kotlinx.datetime)
 
+    // only for compatibility testing
     compatTestImplementation(gradleTestKit())
 }
 

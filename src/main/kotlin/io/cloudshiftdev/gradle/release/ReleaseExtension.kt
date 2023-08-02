@@ -7,9 +7,10 @@ import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import javax.inject.Inject
 import kotlin.reflect.KClass
 import org.gradle.api.Action
+import org.gradle.api.Transformer
+import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.ProjectLayout
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
@@ -200,19 +201,13 @@ public fun ReleaseExtension.preProcessFiles(action: Action<PreProcessFilesDsl>) 
     preReleaseHook<PreProcessFilesHook>(templateSpecs, replacementSpecs)
 }
 
-public abstract class PreProcessFilesDsl
-@Inject
-constructor(private val objects: ObjectFactory, private val layout: ProjectLayout) {
+public abstract class PreProcessFilesDsl @Inject constructor(private val objects: ObjectFactory) {
 
     internal val templateSpecs = mutableListOf<PreProcessFilesHook.TemplateSpec>()
     internal val replacementSpecs = mutableListOf<PreProcessFilesHook.ReplacementSpec>()
 
-    public fun templates(
-        destinationDir: Directory = layout.projectDirectory,
-        action: Action<TemplateDsl>
-    ) {
+    public fun templates(action: Action<TemplateDsl>) {
         val dsl = objects.newInstance<TemplateDsl>()
-        dsl.destinationDir.set(destinationDir)
         action.execute(dsl)
         templateSpecs.add(dsl.build())
     }
@@ -225,23 +220,27 @@ constructor(private val objects: ObjectFactory, private val layout: ProjectLayou
     }
 
     public abstract class TemplateDsl {
+        internal abstract var source: ConfigurableFileTree
         internal abstract val destinationDir: DirectoryProperty
-        internal abstract val preventTampering: Property<Boolean>
-        internal abstract val includes: ListProperty<String>
-        internal abstract val excludes: ListProperty<String>
         internal abstract val properties: MapProperty<String, String>
+        internal abstract val preventTampering: Property<Boolean>
+        internal abstract val transformer: Property<Transformer<String?, String>>
 
         init {
             preventTampering.convention(true)
-        }
-        /**  */
-        public fun includes(vararg pattern: String) {
-            includes.addAll(pattern.toList())
+            transformer.convention(Transformer { it })
         }
 
-        /**  */
-        public fun excludes(vararg pattern: String) {
-            excludes.addAll(pattern.toList())
+        public fun source(fileTree: ConfigurableFileTree) {
+            this.source = fileTree
+        }
+
+        public fun into(directory: Directory) {
+            destinationDir.set(directory)
+        }
+
+        public fun rename(transformer: Transformer<String?, String>) {
+            this.transformer.set(transformer)
         }
 
         public fun property(key: String, value: String) {
@@ -268,11 +267,11 @@ constructor(private val objects: ObjectFactory, private val layout: ProjectLayou
 
         internal fun build(): PreProcessFilesHook.TemplateSpec {
             return PreProcessFilesHook.TemplateSpec(
+                source = source,
                 destinationDir = destinationDir,
                 preventTampering = preventTampering,
-                includes = includes,
-                excludes = excludes,
-                properties = properties
+                properties = properties,
+                rename = transformer
             )
         }
     }

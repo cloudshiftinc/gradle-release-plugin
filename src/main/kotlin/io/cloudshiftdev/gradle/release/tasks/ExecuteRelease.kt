@@ -13,12 +13,7 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(
@@ -92,8 +87,13 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
 
     private fun executePreReleaseHooks(versions: Versions) {
         try {
-            preReleaseHooks.get().forEach {
-                val hook = objects.newInstance(it.clazz, *it.parameters)
+
+            val hooks = preReleaseHooks.get().map { objects.newInstance(it.clazz, *it.parameters) }
+
+            // validate all hooks before any mutating activities
+            hooks.forEach(PreReleaseHook::validate)
+
+            hooks.forEach { hook ->
                 val workingDirectory = temporaryDir.resolve(UUID.randomUUID().toString())
                 workingDirectory.mkdirs()
                 try {

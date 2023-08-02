@@ -3,9 +3,6 @@ package io.cloudshiftdev.gradle.release
 import io.cloudshiftdev.gradle.release.GitRepository.PathStatus.Uncommitted
 import io.cloudshiftdev.gradle.release.GitRepository.PathStatus.Untracked
 import io.cloudshiftdev.gradle.release.util.releasePluginError
-import java.io.ByteArrayOutputStream
-import java.io.File
-import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logging
@@ -13,6 +10,9 @@ import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.process.ExecOperations
+import java.io.ByteArrayOutputStream
+import java.io.File
+import javax.inject.Inject
 
 internal abstract class GitRepository @Inject constructor(private val execOps: ExecOperations) :
     BuildService<GitRepository.Params> {
@@ -21,13 +21,6 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
     internal interface Params : BuildServiceParameters {
         val projectDir: DirectoryProperty
         val gitSettings: Property<ReleaseExtension.GitSettings>
-    }
-
-    private object GitCommands {
-
-        // current branch (see
-        // https://git-blame.blogspot.com/2013/06/checking-current-branch-programatically.html)
-        val CurrentBranch = listOf("symbolic-ref", "--short", "-q", "HEAD")
     }
 
     private val workingDir: File
@@ -58,7 +51,8 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
     }
 
     fun currentBranch(): String {
-        val cmdResult = git(GitCommands.CurrentBranch)
+        // https://git-blame.blogspot.com/2013/06/checking-current-branch-programatically.html)
+        val cmdResult = git("symbolic-ref", "--short", "-q", "HEAD")
         return cmdResult.outputLines.firstOrNull()
             ?: releasePluginError("Unable to determine current branch")
     }
