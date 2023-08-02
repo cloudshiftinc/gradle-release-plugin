@@ -1,16 +1,15 @@
 package io.cloudshiftdev.gradle.release.tasks
 
-import io.cloudshiftdev.gradle.release.PreReleaseHookSpec
 import io.cloudshiftdev.gradle.release.util.PropertiesFile
+import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.nextPatch
 import io.github.z4kn4fein.semver.nextPreRelease
 import io.github.z4kn4fein.semver.toVersion
-import java.util.*
 import javax.inject.Inject
 import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.model.ObjectFactory
+import org.gradle.api.logging.Logger
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
@@ -19,11 +18,12 @@ import org.gradle.work.DisableCachingByDefault
 @DisableCachingByDefault(
     because = "Releases are infrequent and by definition change the task inputs"
 )
-public abstract class ExecuteRelease
-@Inject
-constructor(private val objects: ObjectFactory, private val fs: FileSystemOperations) :
+public abstract class ExecuteRelease @Inject constructor(private val fs: FileSystemOperations) :
     AbstractReleaseTask() {
-    @get:Internal internal abstract val preReleaseHooks: ListProperty<PreReleaseHookSpec<*>>
+
+    @get:Internal internal abstract val preReleaseHooks: ListProperty<PreReleaseHook>
+
+    @get:Input internal abstract val dryRun: Property<Boolean>
 
     @get:PathSensitive(PathSensitivity.RELATIVE)
     @get:InputFile
@@ -45,12 +45,24 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
     public fun action() {
         val git = gitRepository.get()
 
+        val hooks = preReleaseHooks.get()
+
+        // validate all hooks before any mutating activities
+        hooks.forEach(PreReleaseHook::validate)
+
         val versions = incrementVersion {
-            // TODO - configuration for which to increment
+            // TODO - configuration for which segment to increment
             it.nextPatch()
         }
 
-        executePreReleaseHooks(versions)
+        executePreReleaseHooks(hooks, versions)
+
+        if (dryRun.get()) {
+            logger.warn(
+                "DRY RUN: release not committed, tagged or pushed.  Modified files remain in-place for inspection."
+            )
+            return
+        }
 
         // add any files that may have been created/modified by pre-release tasks
         git.stageFiles()
@@ -85,28 +97,20 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
         }
     }
 
-    private fun executePreReleaseHooks(versions: Versions) {
+    private fun executePreReleaseHooks(hooks: List<PreReleaseHook>, versions: Versions) {
         try {
-
-            val hooks = preReleaseHooks.get().map { objects.newInstance(it.clazz, *it.parameters) }
-
-            // validate all hooks before any mutating activities
-            hooks.forEach(PreReleaseHook::validate)
-
-            hooks.forEach { hook ->
-                val workingDirectory = temporaryDir.resolve(UUID.randomUUID().toString())
+            hooks.forEachIndexed { index, hook ->
+                val workingDirectory = temporaryDir.resolve("pre-release-hook-$index")
+                fs.delete { delete(workingDirectory) }
                 workingDirectory.mkdirs()
-                try {
-                    hook.execute(
-                        PreReleaseHook.HookContext(
-                            versions.previousVersion,
-                            versions.version,
-                            workingDirectory = workingDirectory,
-                        ),
-                    )
-                } finally {
-                    fs.delete { delete(workingDirectory) }
-                }
+                hook.execute(
+                    PreReleaseHook.HookContext(
+                        versions.previousVersion,
+                        versions.version,
+                        workingDirectory = workingDirectory,
+                        dryRun.get()
+                    ),
+                )
             }
         } catch (t: Throwable) {
             // rollback version change if any exceptions from pre-release hooks
@@ -135,6 +139,10 @@ constructor(private val objects: ObjectFactory, private val fs: FileSystemOperat
         )
 
         return Versions(previousVersion = currentVersion, version = nextVersion)
+    }
+
+    override fun getLogger(): Logger {
+        return ReleasePluginLogger.wrapLogger(super.getLogger())
     }
 
     private data class Versions(val previousVersion: Version, val version: Version)

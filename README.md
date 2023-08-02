@@ -96,32 +96,27 @@ release {
     
     // template for new version commit message
     newVersionCommitMessage = "[Release] - new version commit:"
-    
-    // built-in pre-release hook for file processing, useful for updating version references in documentation
-    preProcessFiles {
-        
+
+    preReleaseHooks {
         // copy templates from a master location, expanding version references and other properties
-        templates("gradle/templates", ".") {
-            
-            // whether to allow tampering of generated content
-            // generated content is protected by creating & checking sha256 fingerprint
-            allowTampering()
-            
-            // patterns to include
-            includes("**/*")
-            
-            // patterns to exclude
-            excludes("")
+        // by default `$version` is expanded using the release version
+        // other expansion properties can be added via `property` or `properties`
+        // note that properties can be providers for lazy evaluation
+        //
+        // this can be repeated multiple times for different sources/targets etc as required
+        processTemplates {
+            from(fileTree("gradle/templates"))
+            into(project.layout.projectDirectory)
         }
         
         // update files in-place with specified replacements
         replacements {
-            
+
         }
+
+        // custom pre-release hook
+        hook<HookClass>()
     }
-    
-    // custom pre-release hook
-    preReleaseHook<HookClass>()
 }
 ```
 

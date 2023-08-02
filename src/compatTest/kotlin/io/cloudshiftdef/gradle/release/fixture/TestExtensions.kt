@@ -108,8 +108,9 @@ internal fun TestEnvironmentDsl.baseReleasePluginConfiguration() {
         script =
             """
                     plugins {
-                      $ReleasePluginId
+                      id("io.cloudshiftdev.release")
                     }
+                 
                 """
                 .trimIndent()
     }

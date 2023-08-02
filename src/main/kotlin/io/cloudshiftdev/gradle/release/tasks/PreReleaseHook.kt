@@ -11,6 +11,7 @@ public interface PreReleaseHook {
     public data class HookContext(
         val previousVersion: Version,
         val incomingVersion: Version,
-        val workingDirectory: File
+        val workingDirectory: File,
+        val dryRun: Boolean
     )
 }

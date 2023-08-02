@@ -82,6 +82,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
                     group = releaseImplGroup
                     mustRunAfter(preRelease)
 
+                    dryRun.set(releaseExtension.dryRun)
                     versionPropertiesFile.set(releaseExtension.versionProperties.propertiesFile)
                     versionPropertyName.set(releaseExtension.versionProperties.propertyName)
 
@@ -93,7 +94,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
                     incrementAfterRelease.set(releaseExtension.incrementAfterRelease)
                     newVersionCommitMessage.set(releaseExtension.newVersionCommitMessage)
 
-                    preReleaseHooks.set(releaseExtension.preReleaseHooks)
+                    preReleaseHooks.set(releaseExtension.preReleaseHooks.hooks)
                 }
 
             tasks.register(ReleaseTaskName) {
@@ -107,6 +108,10 @@ public abstract class ReleasePlugin : Plugin<Project> {
         val releaseExtension = extensions.create<ReleaseExtension>("release")
 
         releaseExtension.apply {
+            dryRun.convention(
+                providers.gradleProperty("release.dry-run").map { it.toBoolean() }.orElse(false)
+            )
+
             versionProperties {
                 propertiesFile.convention(layout.projectDirectory.file("gradle.properties"))
                 propertyName.convention("version")

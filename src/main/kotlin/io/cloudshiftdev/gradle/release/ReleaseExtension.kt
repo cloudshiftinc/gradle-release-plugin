@@ -2,25 +2,31 @@
 
 package io.cloudshiftdev.gradle.release
 
-import io.cloudshiftdev.gradle.release.hooks.PreProcessFilesHook
+import io.cloudshiftdev.gradle.release.hooks.ReplacementsPreReleaseHook
+import io.cloudshiftdev.gradle.release.hooks.TemplatesPreReleaseHook
 import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import javax.inject.Inject
 import kotlin.reflect.KClass
 import org.gradle.api.Action
-import org.gradle.api.Transformer
-import org.gradle.api.file.ConfigurableFileTree
-import org.gradle.api.file.Directory
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.newInstance
 
 public abstract class ReleaseExtension @Inject constructor(internal val objects: ObjectFactory) {
+
+    /**
+     * Whether to do a dry-run - everything except commits / pushes.
+     *
+     * All checks are performed and modified files are left in-place for inspection.
+     *
+     * Can be set with the Gradle property `release.dry-run`
+     *
+     * Default: **false**
+     */
+    public abstract val dryRun: Property<Boolean>
 
     /**
      * Template for release commit message.
@@ -57,8 +63,6 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
      */
     public abstract val newVersionCommitMessage: Property<String>
 
-    internal abstract val preReleaseHooks: ListProperty<PreReleaseHookSpec<*>>
-
     internal val versionProperties = objects.newInstance<VersionProperties>()
 
     /** Configure where the version property lives. */
@@ -80,30 +84,6 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
          * Default: **version**
          */
         public abstract val propertyName: Property<String>
-    }
-
-    /**
-     * Add a pre-release hook of the specified type, with the (optional) constructor parameters.
-     *
-     * Instances are created dynamically at runtime with constructor parameters injected, via
-     * [ObjectFactory.newInstance].
-     */
-    public inline fun <reified T : PreReleaseHook> preReleaseHook(vararg parameters: Any) {
-        preReleaseHook(T::class, *parameters)
-    }
-
-    /**
-     * Add a pre-release hook of the specified type, with the (optional) constructor parameters.
-     *
-     * Instances are created dynamically at runtime with constructor parameters injected, via
-     * [ObjectFactory.newInstance].
-     */
-    public fun <T : PreReleaseHook> preReleaseHook(type: KClass<T>, vararg parameters: Any) {
-        preReleaseHooks.add(PreReleaseHookSpec(clazz = type.java, parameters))
-    }
-
-    public fun <T : PreReleaseHook> preReleaseHook(type: Class<T>, vararg parameters: Any) {
-        preReleaseHooks.add(PreReleaseHookSpec(clazz = type, parameters))
     }
 
     internal val gitSettings: GitSettings = objects.newInstance<GitSettings>()
@@ -134,6 +114,49 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
          * Default: **<empty>**
          */
         public abstract val pushOptions: ListProperty<String>
+    }
+
+    internal val preReleaseHooks = objects.newInstance<PreReleaseHooks>()
+
+    public abstract class PreReleaseHooks @Inject constructor(internal val objects: ObjectFactory) {
+        internal abstract val hooks: ListProperty<PreReleaseHook>
+
+        /**
+         * Add a pre-release hook of the specified type, with the (optional) constructor parameters.
+         *
+         * Instances are created with constructor parameters injected, via
+         * [ObjectFactory.newInstance].
+         */
+        public fun <T : PreReleaseHook> hook(type: KClass<T>, vararg parameters: Any) {
+            hook(type.java, *parameters)
+        }
+
+        public fun <T : PreReleaseHook> hook(type: Class<T>, vararg parameters: Any) {
+            val hook = objects.newInstance(type, *parameters)
+            hooks.add(hook)
+        }
+
+        /**
+         * Adds a pre-release hook for processing templates.
+         *
+         * Commonly used to insert version number into documentation files, such as README.md.
+         */
+        public fun processTemplates(action: Action<TemplatesPreReleaseHookDsl>) {
+            val dsl = objects.newInstance<TemplatesPreReleaseHookDsl>()
+            action.execute(dsl)
+
+            hook(TemplatesPreReleaseHook::class, dsl.build())
+        }
+
+        public fun processReplacements(action: Action<ReplacementsPreReleaseHookDsl>) {
+            val dsl = ReplacementsPreReleaseHookDsl()
+            action.execute(dsl)
+            hook(ReplacementsPreReleaseHook::class, dsl.build())
+        }
+    }
+
+    public fun preReleaseHooks(action: Action<PreReleaseHooks>) {
+        action.execute(preReleaseHooks)
     }
 
     internal val preReleaseChecks: PreReleaseChecks = objects.newInstance<PreReleaseChecks>()
@@ -178,140 +201,5 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
          * Default: **main**
          */
         @get:Input public abstract val releaseBranchPattern: Property<String>
-    }
-}
-
-internal class PreReleaseHookSpec<T : PreReleaseHook>(
-    val clazz: Class<T>,
-    val parameters: Array<out Any>
-)
-
-/**
- * Adds a pre-release hook for processing files, either via templates or in-line token replacements.
- *
- * Commonly used to insert version number into documentation files, such as README.md.
- */
-public fun ReleaseExtension.preProcessFiles(action: Action<PreProcessFilesDsl>) {
-    val dsl = objects.newInstance<PreProcessFilesDsl>()
-    action.execute(dsl)
-
-    val templateSpecs = dsl.templateSpecs
-    val replacementSpecs = dsl.replacementSpecs
-
-    preReleaseHook<PreProcessFilesHook>(templateSpecs, replacementSpecs)
-}
-
-public abstract class PreProcessFilesDsl @Inject constructor(private val objects: ObjectFactory) {
-
-    internal val templateSpecs = mutableListOf<PreProcessFilesHook.TemplateSpec>()
-    internal val replacementSpecs = mutableListOf<PreProcessFilesHook.ReplacementSpec>()
-
-    public fun templates(action: Action<TemplateDsl>) {
-        val dsl = objects.newInstance<TemplateDsl>()
-        action.execute(dsl)
-        templateSpecs.add(dsl.build())
-    }
-
-    /**  */
-    public fun replacements(action: Action<ReplacementDsl>) {
-        val dsl = ReplacementDsl()
-        action.execute(dsl)
-        replacementSpecs.add(dsl.build())
-    }
-
-    public abstract class TemplateDsl {
-        internal abstract var source: ConfigurableFileTree
-        internal abstract val destinationDir: DirectoryProperty
-        internal abstract val properties: MapProperty<String, String>
-        internal abstract val preventTampering: Property<Boolean>
-        internal abstract val transformer: Property<Transformer<String?, String>>
-
-        init {
-            preventTampering.convention(true)
-            transformer.convention(Transformer { it })
-        }
-
-        public fun source(fileTree: ConfigurableFileTree) {
-            this.source = fileTree
-        }
-
-        public fun into(directory: Directory) {
-            destinationDir.set(directory)
-        }
-
-        public fun rename(transformer: Transformer<String?, String>) {
-            this.transformer.set(transformer)
-        }
-
-        public fun property(key: String, value: String) {
-            properties.put(key, value)
-        }
-
-        public fun property(key: String, value: Provider<String>) {
-            properties.put(key, value)
-        }
-
-        public fun properties(map: Map<String, String>) {
-            properties.putAll(map)
-        }
-
-        /**
-         * By default, files generated from templates will fail the build if they have been tampered
-         * with.
-         *
-         * Call `allowTampering` to disable this check.
-         */
-        public fun allowTampering() {
-            preventTampering.set(false)
-        }
-
-        internal fun build(): PreProcessFilesHook.TemplateSpec {
-            return PreProcessFilesHook.TemplateSpec(
-                source = source,
-                destinationDir = destinationDir,
-                preventTampering = preventTampering,
-                properties = properties,
-                rename = transformer
-            )
-        }
-    }
-
-    public class ReplacementDsl {
-        private val includes = mutableListOf<String>()
-        private val excludes = mutableListOf<String>()
-        private val replacements = mutableMapOf<String, String>()
-
-        /**  */
-        public fun includes(vararg pattern: String) {
-            includes.addAll(pattern)
-        }
-
-        /**  */
-        public fun excludes(vararg pattern: String) {
-            excludes.addAll(pattern)
-        }
-
-        /**  */
-        public fun replace(string: String, replacement: String) {
-            replacements[string] = replacement
-        }
-
-        /**  */
-        public fun replace(replacement: Pair<String, String>) {
-            replacements[replacement.first] = replacement.second
-        }
-
-        /**  */
-        public fun replace(replacements: Map<String, String>) {
-            this.replacements.putAll(replacements)
-        }
-
-        internal fun build(): PreProcessFilesHook.ReplacementSpec {
-            return PreProcessFilesHook.ReplacementSpec(
-                includes = includes,
-                excludes = excludes,
-                replacements = replacements
-            )
-        }
     }
 }
