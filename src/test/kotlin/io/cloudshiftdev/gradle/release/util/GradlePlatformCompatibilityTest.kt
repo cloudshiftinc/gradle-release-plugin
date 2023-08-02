@@ -19,6 +19,7 @@ class GradlePlatformCompatibilityTest :
                 GradleVersion.version("8.0"),
                 GradleVersion.version("8.1"),
                 GradleVersion.version("8.2"),
+                GradleVersion.version("8.3-rc-2"),
                 GradleVersion.version("8.3")
             ) {
                 gradlePlatformCompatibility.isCompatible(it, JavaVersion.VERSION_1_8)
@@ -62,7 +63,7 @@ class GradlePlatformCompatibilityTest :
                 JavaVersion.VERSION_19,
                 JavaVersion.VERSION_20,
             ) {
-                gradlePlatformCompatibility.isCompatible(GradleVersion.version("8.3"), it)
+                gradlePlatformCompatibility.isCompatible(GradleVersion.version("8.3-rc-2"), it)
             }
         }
 

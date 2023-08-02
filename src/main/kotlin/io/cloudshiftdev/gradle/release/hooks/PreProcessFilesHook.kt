@@ -6,13 +6,13 @@ import com.google.common.hash.Hashing
 import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.releasePluginError
 import io.github.z4kn4fein.semver.Version
+import java.io.File
+import java.util.*
+import javax.inject.Inject
 import org.gradle.api.Transformer
 import org.gradle.api.file.*
 import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Provider
-import java.io.File
-import java.util.*
-import javax.inject.Inject
 
 internal abstract class PreProcessFilesHook
 @Inject

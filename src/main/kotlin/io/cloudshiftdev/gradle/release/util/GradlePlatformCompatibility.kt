@@ -21,20 +21,20 @@ internal class GradlePlatformCompatibility {
         sanityCheck()
         val gradleCompatibleVersions = gradleCompatible.joinToString(", ")
         when {
-            gradleIncompatible.any { gradleVersion in it } ->
+            gradleIncompatible.any { gradleVersion.baseVersion in it } ->
                 releasePluginError(
                     "Incompatible with $gradleVersion; compatible versions $gradleCompatibleVersions"
                 )
-            gradleCompatible.none { gradleVersion in it } ->
+            gradleCompatible.none { gradleVersion.baseVersion in it } ->
                 releasePluginError(
                     "Incompatible with $gradleVersion; compatible versions $gradleCompatibleVersions"
                 )
             gradleJavaCompatibility.none {
-                gradleVersion in it.gradleVersionRange &&
+                gradleVersion.baseVersion in it.gradleVersionRange &&
                     javaVersion.majorVersion.toInt() in it.javaVersionRange
             } ->
                 releasePluginError(
-                    "Incompatible Java version $javaVersion; compatible versions $gradleJavaCompatibility"
+                    "Incompatible Java version $javaVersion ($gradleVersion); compatible versions $gradleJavaCompatibility"
                 )
         }
     }

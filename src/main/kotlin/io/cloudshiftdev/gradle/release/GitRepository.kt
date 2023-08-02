@@ -3,6 +3,9 @@ package io.cloudshiftdev.gradle.release
 import io.cloudshiftdev.gradle.release.GitRepository.PathStatus.Uncommitted
 import io.cloudshiftdev.gradle.release.GitRepository.PathStatus.Untracked
 import io.cloudshiftdev.gradle.release.util.releasePluginError
+import java.io.ByteArrayOutputStream
+import java.io.File
+import javax.inject.Inject
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.logging.Logging
@@ -10,9 +13,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.process.ExecOperations
-import java.io.ByteArrayOutputStream
-import java.io.File
-import javax.inject.Inject
 
 internal abstract class GitRepository @Inject constructor(private val execOps: ExecOperations) :
     BuildService<GitRepository.Params> {
