@@ -102,7 +102,7 @@ val ktfmtFormat by
             mutableListOf(
                 "--kotlinlang-style",
                 "--do-not-remove-unused-imports",
-                layout.projectDirectory.asFile.absolutePath,
+                "${layout.projectDirectory.asFile.absolutePath}/src",
             )
         if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
         group = "formatting"
