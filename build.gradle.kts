@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "1.2.0"
+    alias(libs.plugins.gradlePluginPublish)
     signing
 
     // convention plugin from build-logic
@@ -49,37 +49,28 @@ tasks.named<KotlinCompile>("compileKotlin") {
     }
 }
 
+val testingBase by configurations.creating
+configurations.testImplementation.get().extendsFrom(testingBase)
+configurations.compatTestImplementation.get().extendsFrom(testingBase)
+
 dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
-    implementation("org.apache.velocity:velocity-engine-core:2.3")
+    implementation(libs.velocity)
 
-    // testing libraries
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(platform(libs.junit.bom))
-    testImplementation(libs.junit.jupiter.engine)
+    // testing libraries for both unit & compatibility tests
+    testingBase(platform(libs.junit.bom))
+    testingBase(platform(libs.junit.bom))
+    testingBase(libs.junit.jupiter.engine)
 
-    testImplementation(platform(libs.kotest.bom))
-    testImplementation(libs.kotest.assertions.core)
-    testImplementation(libs.kotest.assertions.json)
-    testImplementation(libs.kotest.framework.datatest)
-    testImplementation(libs.kotest.property)
-    testImplementation(libs.kotest.runner.junit5)
+    testingBase(platform(libs.kotest.bom))
+    testingBase(libs.kotest.assertions.core)
+    testingBase(libs.kotest.assertions.json)
+    testingBase(libs.kotest.framework.datatest)
+    testingBase(libs.kotest.property)
+    testingBase(libs.kotest.runner.junit5)
 
-    testImplementation(libs.jetbrains.kotlinx.datetime)
-
-    compatTestImplementation(platform(libs.junit.bom))
-    compatTestImplementation(platform(libs.junit.bom))
-    compatTestImplementation(libs.junit.jupiter.engine)
-
-    compatTestImplementation(platform(libs.kotest.bom))
-    compatTestImplementation(libs.kotest.assertions.core)
-    compatTestImplementation(libs.kotest.assertions.json)
-    compatTestImplementation(libs.kotest.framework.datatest)
-    compatTestImplementation(libs.kotest.property)
-    compatTestImplementation(libs.kotest.runner.junit5)
-
-    compatTestImplementation(libs.jetbrains.kotlinx.datetime)
+    testingBase(libs.jetbrains.kotlinx.datetime)
 
     // only for compatibility testing
     compatTestImplementation(gradleTestKit())
@@ -129,6 +120,6 @@ fun prepareCompatMatrix(matrixFile: File): List<Pair<Int, String>> {
             val javaVersion = it.key.toString().removePrefix("java").toInt()
             val gradleVersions = it.value.toString().split(",").joinToString(", ")
             javaVersion to gradleVersions
-        }
+        }.sortedBy { it.first }
     }
 }

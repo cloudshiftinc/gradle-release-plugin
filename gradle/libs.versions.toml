@@ -4,6 +4,7 @@
 
 [plugins]
 release = { id = "io.cloudshiftdev.release", version = "0.1.20"}
+gradlePluginPublish = { id = "com.gradle.plugin-publish", version = "1.2.0"}
 
 [libraries]
 
@@ -12,6 +13,7 @@ release = { id = "io.cloudshiftdev.release", version = "0.1.20"}
 #
 
 # JUnit
+
 junit-bom = { module = "org.junit:junit-bom", version = "5.10.0" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params" }
@@ -33,5 +35,6 @@ kotest-extensions-spring = { module = "io.kotest.extensions:kotest-extensions-sp
 
 guava = { module = "com.google.guava:guava", version = "32.1.2-jre" }
 semver = { module = "io.github.z4kn4fein:semver", version = "1.4.2" }
+velocity = { module = "org.apache.velocity:velocity-engine-core", version = "2.3"}
 
 jetbrains-kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.4.0" }
