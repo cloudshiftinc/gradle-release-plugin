@@ -9,11 +9,6 @@ plugins {
     id("org.ajoberstar.stutter")
 }
 
-val precommit = tasks.register("precommit") {
-    group = "verification"
-    dependsOn(tasks.named("check"))
-}
-
 configure<StutterExtension> {
     sparse.set(true)
     matrices {
@@ -25,12 +20,14 @@ configure<StutterExtension> {
     }
 }
 
-precommit {
-    dependsOn("stutterWriteLocks", "compatTestJava8Gradle7.0.2", "compatTestJava20Gradle8.3-rc-3")
-}
+val ktfmt: Configuration by configurations.creating
 
-// ensure Kotlin workflow scripts are executed to keep the generated yaml up-to-date
+dependencies { ktfmt("com.facebook:ktfmt:0.44") }
+
+
+
 tasks {
+    // ensure Kotlin workflow scripts are executed to keep the generated yaml up-to-date
     // from
     // https://github.com/Vampire/setup-wsl/blob/master/gradle/build-logic/src/main/kotlin/net/kautler/github_actions.gradle.kts
     val preprocessWorkflows by registering
@@ -57,63 +54,70 @@ tasks {
             preprocessWorkflows { dependsOn(task) }
         }
 
-    named("precommit") { dependsOn(preprocessWorkflows) }
-}
-
-tasks.withType<Test>().configureEach {
-    systemProperty("kotest.framework.dump.config", "true")
-    systemProperty(
-        "org.gradle.testkit.dir",
-        layout.projectDirectory.dir("build/gradle-testkit").asFile.toString(),
-    )
-
-    useJUnitPlatform()
-
-    reports {
-        html.required.set(true)
-        junitXml.apply { required.set(true) }
+    register("precommit") {
+        group = "verification"
+        dependsOn(
+                preprocessWorkflows,
+                named("check"),
+                named("stutterWriteLocks"),
+                named("compatTestJava8Gradle7.0.2"),
+                named("compatTestJava20Gradle8.3-rc-3"),
+        )
     }
 
-    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
-    testLogging {
-        events =
-            setOf(
-                TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_OUT,
-                TestLogEvent.STANDARD_ERROR,
-            )
-        exceptionFormat = TestExceptionFormat.SHORT
-        showExceptions = true
-        showCauses = true
-        showStackTraces = true
-    }
-}
+    withType<Test>().configureEach {
+        systemProperty("kotest.framework.dump.config", "true")
+        systemProperty(
+            "org.gradle.testkit.dir",
+            layout.projectDirectory.dir("build/gradle-testkit").asFile.toString(),
+        )
 
-tasks.withType<AbstractArchiveTask>().configureEach {
-    isPreserveFileTimestamps = false
-    isReproducibleFileOrder = true
-}
+        useJUnitPlatform()
 
-val ktfmt: Configuration by configurations.creating
+        reports {
+            html.required.set(true)
+            junitXml.apply { required.set(true) }
+        }
 
-dependencies { ktfmt("com.facebook:ktfmt:0.44") }
-
-val ktfmtFormat by
-    tasks.registering(JavaExec::class) {
-        val ktfmtArgs =
-            mutableListOf(
-                "--kotlinlang-style",
-                "--do-not-remove-unused-imports",
-                "${layout.projectDirectory.asFile.absolutePath}/src",
-            )
-        if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
-        group = "formatting"
-        description = "Run ktfmt"
-        classpath = ktfmt
-        mainClass.set("com.facebook.ktfmt.cli.Main")
-        args(ktfmtArgs)
+        maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
+        testLogging {
+            events =
+                setOf(
+                    TestLogEvent.FAILED,
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_OUT,
+                    TestLogEvent.STANDARD_ERROR,
+                )
+            exceptionFormat = TestExceptionFormat.SHORT
+            showExceptions = true
+            showCauses = true
+            showStackTraces = true
+        }
     }
 
-val check = tasks.named("check") { dependsOn(ktfmtFormat) }
+    withType<AbstractArchiveTask>().configureEach {
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
+    }
+
+    val ktfmtFormat =
+        register<JavaExec>("ktfmt") {
+            val ktfmtArgs =
+                mutableListOf(
+                    "--kotlinlang-style",
+                    "--do-not-remove-unused-imports",
+                    "${layout.projectDirectory.asFile.absolutePath}/src",
+                )
+            if (System.getenv()["CI"] != null) ktfmtArgs.add("--set-exit-if-changed")
+            group = "formatting"
+            description = "Run ktfmt"
+            classpath = ktfmt
+            mainClass.set("com.facebook.ktfmt.cli.Main")
+            args(ktfmtArgs)
+        }
+
+   named("check") { dependsOn(ktfmtFormat) }
+}
+
+

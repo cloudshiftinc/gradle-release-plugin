@@ -1,3 +1,4 @@
+
 import com.gradle.publish.PublishTask
 import java.util.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -10,7 +11,7 @@ plugins {
     // convention plugin from build-logic
     id("io.cloudshiftdev.gradle.conventions")
 
-    //    id("io.cloudshiftdev.release") version "0.1.20"
+    //id("io.cloudshiftdev.release") version "0.1.20" apply false
     //    alias(libs.plugins.release)
 }
 
@@ -119,23 +120,15 @@ tasks.withType<PublishTask>().configureEach {
     onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
 }
 
-println(buildTestMatrixMarkdown(file("stutter.lockfile")))
-
-fun buildTestMatrixMarkdown(matrixFile: File): String {
-    return matrixFile.bufferedReader().use {
+fun prepareCompatMatrix(matrixFile: File): List<Pair<Int, String>> {
+    return matrixFile.bufferedReader().use { reader ->
         val props = Properties()
-        props.load(it)
-        val keys =
-            props.keys
-                .map(Any::toString)
-                .map { it to it.removePrefix("java").toInt() }
-                .sortedBy { it.second }
-        val tableRows =
-            keys.map { versionPair ->
-                val gradleVersions =
-                    props[versionPair.first]?.toString()?.split(",")?.joinToString(", ")
-                "| Java ${versionPair.second} | Gradle $gradleVersions |"
-            }
-        "| Java Version | Gradle Version |\n| --- | --- |\n" + tableRows.joinToString("\n")
+        props.load(reader)
+
+        props.entries.map {
+            val javaVersion = it.key.toString().removePrefix("java").toInt()
+            val gradleVersions = it.value.toString().split(",").joinToString(", ")
+            javaVersion to gradleVersions
+        }
     }
 }
