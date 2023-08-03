@@ -51,7 +51,8 @@ private fun writeGitIgnore(workingDir: File) {
 }
 
 private fun writeGradleBuild(workingDir: File, gradleBuild: GradleBuild) {
-    val gradleBuildFile = workingDir.resolve("build.gradle.kts")
+    val ext = gradleBuild.scriptLanguage.ext
+    val gradleBuildFile = workingDir.resolve("build.gradle$ext")
     gradleBuildFile.writeText(gradleBuild.script ?: "")
 }
 
@@ -160,18 +161,33 @@ internal class GradleSettings {
     var script: String? = null
 }
 
+internal sealed class ScriptLanguage(val ext: String) {
+    object Kotlin : ScriptLanguage(".kts") {
+        override fun toString(): String {
+            return "Kotlin build script"
+        }
+    }
+
+    object Groovy : ScriptLanguage("") {
+        override fun toString(): String {
+            return "Groovy build script"
+        }
+    }
+}
+
 internal class GradleBuild {
+    var scriptLanguage: ScriptLanguage = ScriptLanguage.Kotlin
     var script: String? = null
 }
 
 internal fun GradleRunner.releasePluginConfiguration() {
     withPluginClasspath()
     //    withDebug(true)
-    withGradleVersion(System.getProperty("compat.gradle.version"))
+    withGradleVersion(
+        System.getProperty("compat.gradle.version") ?: GradleVersion.current().version
+    )
     withArguments("release", "--info", "--stacktrace")
 }
-
-private val ReleasePluginId = "id(\"io.cloudshiftdev.release\")"
 
 private fun createGitRepository(dir: File, upstreamRepositoryDir: File) {
     val upstreamUrl = upstreamRepositoryDir.toURI().toURL().toString().replace("file:/", "file:///")

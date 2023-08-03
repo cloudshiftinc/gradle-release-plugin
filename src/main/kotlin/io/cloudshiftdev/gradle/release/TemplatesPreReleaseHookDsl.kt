@@ -9,6 +9,7 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 
 @DslMarker public annotation class TemplatesPreReleaseHookDslMarker
 
@@ -41,6 +42,10 @@ public abstract class TemplatesPreReleaseHookDsl {
         properties.put(key, value)
     }
 
+    public fun propertyFrom(key: String, providerOfValue: Provider<Any>) {
+        properties.putFrom(key, providerOfValue)
+    }
+
     public fun properties(map: Map<String, Any>) {
         properties.putAll(map)
     }
@@ -63,5 +68,12 @@ public abstract class TemplatesPreReleaseHookDsl {
             properties = properties,
             pathTransformer = pathTransformer
         )
+    }
+
+    private fun <K : Any, V : Any> MapProperty<K, V>.putFrom(
+        key: K,
+        providerOfValue: Provider<out V>
+    ) {
+        put(key, providerOfValue)
     }
 }
