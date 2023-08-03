@@ -3,6 +3,7 @@
 package io.cloudshiftdev.gradle.release.hooks
 
 import com.google.common.hash.Hashing
+import com.google.common.io.CharStreams
 import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import io.cloudshiftdev.gradle.release.util.releasePluginError
@@ -12,7 +13,11 @@ import java.util.*
 import javax.inject.Inject
 import org.apache.velocity.VelocityContext
 import org.apache.velocity.app.VelocityEngine
-import org.gradle.api.file.*
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.EmptyFileVisitor
+import org.gradle.api.file.FileTree
+import org.gradle.api.file.FileVisitDetails
+import org.gradle.api.file.RelativePath
 import org.gradle.api.provider.Provider
 
 public fun interface PathTransformer {
@@ -34,35 +39,9 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
     )
 
     override fun validate() {
-        checkTampering(templateSpec)
-    }
+        val actions = mutableListOf(velocityTemplateCopyAction())
 
-    override fun execute(context: PreReleaseHook.HookContext) {
-        processTemplateSpecs(context.incomingVersion)
-    }
-
-    private fun processTemplateSpecs(incomingVersion: Version) {
-        val engine = VelocityEngine()
-
-        val props = Properties()
-        props["runtime.references.strict"] = "true"
-        props["runtime.references.strict.escape"] = "true"
-        engine.init(props)
-
-        val properties =
-            mapOf("version" to incomingVersion.toString(), "versionObj" to incomingVersion) +
-                templateSpec.properties.get()
-
-        val propTypes = properties.map { "${it.key}: ${it.value} (type: ${it.value.javaClass})" }
-        logger.info("Template properties: $propTypes")
-
-        val context = VelocityContext(properties)
-
-        val actions = mutableListOf<CopyAction>(VelocityTemplateCopyAction(engine, context))
-
-        if (templateSpec.preventTampering.get()) {
-            actions.add(WriteChecksumCopyAction())
-        }
+        if (templateSpec.preventTampering.get()) actions.add(VerifyChecksumCopyAction())
 
         val visitor =
             CopyFileVisitor(
@@ -73,11 +52,43 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
         templateSpec.source.excludeChecksumPatterns().visit(visitor)
     }
 
-    private fun checkTampering(templateSpec: TemplateSpec) {
-        if (!templateSpec.preventTampering.get()) return
+    private fun velocityTemplateCopyAction(version: Version? = null): CopyAction {
+        val effectiveVersion =
+            when (version) {
+                null -> Version.parse("99.99.99")
+                else -> version
+            }
+        val engine = VelocityEngine()
+
+        val props = Properties()
+        props["runtime.references.strict"] = "true"
+        props["runtime.references.strict.escape"] = "true"
+        engine.init(props)
+
+        val properties =
+            mapOf("version" to effectiveVersion.toString(), "versionObj" to effectiveVersion) +
+                templateSpec.properties.get()
+
+        val propTypes = properties.map { "${it.key}: ${it.value} (type: ${it.value.javaClass})" }
+        logger.info("Template properties: $propTypes")
+
+        val velocityContext = VelocityContext(properties)
+
+        return VelocityTemplateCopyAction(engine, velocityContext, version == null)
+    }
+
+    override fun execute(context: PreReleaseHook.HookContext) {
+        val incomingVersion = context.incomingVersion
+
+        val actions = mutableListOf(velocityTemplateCopyAction(incomingVersion))
+
+        if (templateSpec.preventTampering.get()) {
+            actions.add(WriteChecksumCopyAction())
+        }
+
         val visitor =
             CopyFileVisitor(
-                listOf(VerifyChecksumCopyAction()),
+                actions,
                 templateSpec.destinationDir.get().asFile,
                 templateSpec.pathTransformer.get()
             )
@@ -106,12 +117,20 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
 
     private class VelocityTemplateCopyAction(
         private val engine: VelocityEngine,
-        private val context: VelocityContext
+        private val context: VelocityContext,
+        private val dryRun: Boolean
     ) : CopyAction {
         override fun copy(source: File, target: File, relativePath: RelativePath) {
-            target.parentFile.mkdirs()
+            val writer =
+                when (dryRun) {
+                    true -> CharStreams.nullWriter()
+                    else -> {
+                        target.parentFile.mkdirs()
+                        target.bufferedWriter()
+                    }
+                }
             source.bufferedReader().use { reader ->
-                target.bufferedWriter().use { writer ->
+                writer.use { writer ->
                     engine.evaluate(context, writer, relativePath.toString(), reader)
                 }
             }

@@ -26,7 +26,7 @@ configure<StutterExtension> {
 }
 
 precommit {
-    dependsOn("compatTestJava8Gradle7.0.2", "compatTestJava20Gradle8.3-rc-2")
+    dependsOn("compatTestJava8Gradle7.0.2", "compatTestJava20Gradle8.3-rc-3")
 }
 
 // ensure Kotlin workflow scripts are executed to keep the generated yaml up-to-date

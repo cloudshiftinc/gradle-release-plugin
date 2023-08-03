@@ -26,7 +26,7 @@ public abstract class TemplatesPreReleaseHookDsl {
     }
 
     public fun from(fileTree: ConfigurableFileTree) {
-        this.from = fileTree
+        from = fileTree
     }
 
     public fun into(directory: Directory) {
@@ -34,7 +34,7 @@ public abstract class TemplatesPreReleaseHookDsl {
     }
 
     public fun pathTransformer(transformer: PathTransformer) {
-        this.pathTransformer.set(transformer)
+        pathTransformer.set(transformer)
     }
 
     public fun property(key: String, value: Any) {
