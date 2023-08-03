@@ -15,8 +15,6 @@ plugins {
     //    alias(libs.plugins.release)
 }
 
-val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
-
 gradlePlugin {
     website.set("https://github.com/cloudshiftinc/gradle-release-plugin")
     vcsUrl.set("https://github.com/cloudshiftinc/gradle-release-plugin")
@@ -31,25 +29,7 @@ gradlePlugin {
     }
 }
 
-tasks.withType<ValidatePlugins>().configureEach {
-    enableStricterValidation.set(true)
-    failOnWarning.set(true)
-}
-
-kotlin {
-    explicitApi()
-    jvmToolchain { languageVersion.set(JavaLanguageVersion.of(8)) }
-}
-
-tasks.named<KotlinCompile>("compileKotlin") {
-    kotlinOptions {
-        // language version must match the earliest supported Gradle version
-        apiVersion = "1.4"
-        languageVersion = "1.4"
-    }
-}
-
-val testingBase by configurations.creating
+val testingBase: Configuration by configurations.creating
 configurations.testImplementation.get().extendsFrom(testingBase)
 configurations.compatTestImplementation.get().extendsFrom(testingBase)
 
@@ -75,6 +55,8 @@ dependencies {
     // only for compatibility testing
     compatTestImplementation(gradleTestKit())
 }
+
+val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
 
 signing {
     val signingKey: String? by project
@@ -103,12 +85,33 @@ val publishingPredicate = provider {
     }
 }
 
-tasks.withType<PublishToMavenRepository>().configureEach {
-    onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
+kotlin {
+    explicitApi()
+    jvmToolchain { languageVersion.set(JavaLanguageVersion.of(8)) }
 }
 
-tasks.withType<PublishTask>().configureEach {
-    onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
+tasks {
+
+    withType<ValidatePlugins>().configureEach {
+        enableStricterValidation.set(true)
+        failOnWarning.set(true)
+    }
+
+    named<KotlinCompile>("compileKotlin") {
+        kotlinOptions {
+            // language version must match the earliest supported Gradle version
+            apiVersion = "1.4"
+            languageVersion = "1.4"
+        }
+    }
+
+    withType<PublishToMavenRepository>().configureEach {
+        onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
+    }
+
+    withType<PublishTask>().configureEach {
+        onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
+    }
 }
 
 fun prepareCompatMatrix(matrixFile: File): List<Pair<Int, String>> {
