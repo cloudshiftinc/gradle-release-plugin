@@ -63,6 +63,15 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
      */
     public abstract val newVersionCommitMessage: Property<String>
 
+    /**
+     * Version segment to bump on release.
+     *
+     * Valid values are `major`, `minor`, or `patch`
+     *
+     * Default: **`patch`**
+     */
+    public abstract val releaseBump: Property<String>
+
     internal val versionProperties = objects.newInstance<VersionProperties>()
 
     /** Configure where the version property lives. */

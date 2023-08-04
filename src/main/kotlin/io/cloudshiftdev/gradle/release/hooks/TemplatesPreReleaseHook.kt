@@ -57,8 +57,10 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
             }
 
         val properties =
-            mapOf("releaseVersion" to effectiveVersion.toString(), "releaseVersionObj" to effectiveVersion) +
-                templateSpec.properties.get()
+            mapOf(
+                "releaseVersion" to effectiveVersion.toString(),
+                "releaseVersionObj" to effectiveVersion
+            ) + templateSpec.properties.get()
 
         val propTypes = properties.map { "${it.key}: ${it.value} (${it.value.javaClass})" }
         logger.info("Template properties: $propTypes")

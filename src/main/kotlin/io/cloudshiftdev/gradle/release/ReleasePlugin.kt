@@ -95,6 +95,14 @@ public abstract class ReleasePlugin : Plugin<Project> {
                     newVersionCommitMessage.set(releaseExtension.newVersionCommitMessage)
 
                     preReleaseHooks.set(releaseExtension.preReleaseHooks.hooks)
+
+                    releaseBump.set(
+                        providers
+                            .gradleProperty("release.bump")
+                            .orElse(releaseExtension.releaseBump)
+                    )
+                    releaseVersion.convention(providers.gradleProperty("release.version"))
+                    nextVersion.convention(providers.gradleProperty("release.next-version"))
                 }
 
             tasks.register(ReleaseTaskName) {
@@ -109,7 +117,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
 
         releaseExtension.apply {
             dryRun.convention(
-                providers.gradleProperty("release.dry-run").map { it.toBoolean() }.orElse(false)
+                providers.gradleProperty("release.dry-run").map { it.toBoolean() }.orElse(false),
             )
 
             versionProperties {
@@ -128,18 +136,20 @@ public abstract class ReleasePlugin : Plugin<Project> {
             }
 
             releaseCommitMessage.convention(
-                "[Release] - release commit: {{preReleaseVersion}} -> {{releaseVersion}}"
+                "[Release] - release commit: {{preReleaseVersion}} -> {{releaseVersion}}",
             )
 
             versionTagTemplate.convention("v{{releaseVersion}}")
             versionTagCommitMessage.convention(
-                "[Release] - creating tag: {{preReleaseVersion}} -> {{releaseVersion}}"
+                "[Release] - creating tag: {{preReleaseVersion}} -> {{releaseVersion}}",
             )
 
             incrementAfterRelease.convention(true)
             newVersionCommitMessage.convention(
-                "[Release] - new version commit: {{nextPreReleaseVersion}}"
+                "[Release] - new version commit: {{releaseVersion}} -> {{nextPreReleaseVersion}}",
             )
+
+            releaseBump.set("patch")
         }
         return releaseExtension
     }

@@ -98,9 +98,14 @@ release {
     // template for new version commit message
     newVersionCommitMessage = "[Release] - new version commit: {{nextPreReleaseVersion}}"
 
+    // which version segment is incremented for the next pre-release version
+    releaseBump = "patch"
+    
     preReleaseHooks {
         // copy Mustache templates from a master location, processing version references and other properties
-        // The properties `version` and `versionObj` are exposed by default
+        //
+        // See the 'Templates' section below for details on which properties are exposed for use in templates
+        //
         // other expansion properties can be added via `property` or `properties`
         // note that properties can be providers for lazy evaluation
         //
@@ -124,9 +129,9 @@ release {
 
 # Templates
 
-Ths plugin use [Mustache](https://mustache.github.io) templates.
+Ths plugin uses [Mustache](https://mustache.github.io) templates.
 
-The following template contexts are exposed for use in templates
+The following template contexts are exposed for use in templates:
 
 | Use Case                      | Template Context                                                                                                                                         |
 |-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -141,7 +146,7 @@ By default a release will increment the `patch` segment of the version, e.g. `1.
 
 If you wish to...
 
-### Increment the next version post-release
+### Adjust the next version post-release
 
 `./gradlew release -Prelease.bump=major/minor/patch`
 
@@ -152,6 +157,9 @@ If you wish to...
 | `patch`        | 1.2.2-SNAPSHOT | 1.2.2 | 1.2.3-SNAPSHOT |
 
 `patch` is the default behaviour when `release.bump` is not specified.
+
+`release.bump` can be adjusted persistently in the `release` extension; using the `release.bump` property
+overrides any other setting.
 
 ### Specify the release version
 

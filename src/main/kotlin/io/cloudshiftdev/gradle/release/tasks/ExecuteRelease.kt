@@ -4,9 +4,11 @@ import com.github.mustachejava.DefaultMustacheFactory
 import io.cloudshiftdev.gradle.release.hooks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.PropertiesFile
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
+import io.cloudshiftdev.gradle.release.util.releasePluginError
 import io.github.z4kn4fein.semver.Version
+import io.github.z4kn4fein.semver.nextMajor
+import io.github.z4kn4fein.semver.nextMinor
 import io.github.z4kn4fein.semver.nextPatch
-import io.github.z4kn4fein.semver.nextPreRelease
 import io.github.z4kn4fein.semver.toVersion
 import java.io.StringReader
 import java.io.StringWriter
@@ -20,6 +22,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -51,8 +54,18 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
 
     @get:Input internal abstract val newVersionCommitMessage: Property<String>
 
+    @get:Input internal abstract val releaseBump: Property<String>
+
+    @get:Input @get:Optional internal abstract val releaseVersion: Property<String>
+
+    @get:Input @get:Optional internal abstract val nextVersion: Property<String>
+
     @TaskAction
     public fun action() {
+        // prepare the incrementers first to catch any validation issues w/ configuration
+        val releaseVersionIncrementer = releaseVersionIncrementer()
+        val nextPreReleaseVersionIncrementer = nextPreReleaseVersionIncrementer()
+
         val git = gitRepository.get()
 
         val hooks = preReleaseHooks.get()
@@ -60,10 +73,7 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         // validate all hooks before any mutating activities
         hooks.forEach(PreReleaseHook::validate)
 
-        val versions = incrementVersion {
-            // TODO - configuration for which segment to increment
-            it.nextPatch()
-        }
+        val versions = incrementVersion(releaseVersionIncrementer)
 
         executePreReleaseHooks(hooks, versions)
 
@@ -89,7 +99,7 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         // tag with incremented version
         git.tag(
             evaluateTemplate(versionTagTemplate, "versionTag", templateContext),
-            evaluateTemplate(versionTagCommitMessage, "versionTagCommitMessage", templateContext)
+            evaluateTemplate(versionTagCommitMessage, "versionTagCommitMessage", templateContext),
         )
 
         // push everything; this finalizes the release
@@ -98,15 +108,12 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         // commit and push properties files update
         if (incrementAfterRelease.get()) {
             // bump to next pre-release version
-            val postReleaseVersions = incrementVersion {
-                // TODO - configuration for which to increment
-                it.nextPreRelease("SNAPSHOT")
-            }
+            val postReleaseVersions = incrementVersion(nextPreReleaseVersionIncrementer)
             val postReleaseTemplateContext =
                 mapOf(
                     "preReleaseVersion" to versions.previousVersion.toString(),
                     "releaseVersion" to versions.version.toString(),
-                    "nextPreReleaseVersion" to postReleaseVersions.version.toString()
+                    "nextPreReleaseVersion" to postReleaseVersions.version.toString(),
                 )
 
             git.stageFiles()
@@ -114,10 +121,50 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
                 evaluateTemplate(
                     newVersionCommitMessage,
                     "newVersionCommitMessage",
-                    postReleaseTemplateContext
-                )
+                    postReleaseTemplateContext,
+                ),
             )
             git.push()
+        }
+    }
+
+    private fun releaseVersionIncrementer(): (Version) -> Version {
+        return when (val releaseVersionStr = releaseVersion.orNull) {
+            null -> { it -> it.nextPatch() }
+            else -> {
+                val releaseVersion = Version.parse(releaseVersionStr)
+                check(!releaseVersion.isPreRelease) {
+                    "Cannot use pre-release version for release version: $releaseVersionStr"
+                }
+                val incrementer = { _: Version -> releaseVersion }
+                incrementer
+            }
+        }
+    }
+
+    private fun nextPreReleaseVersionIncrementer(): (Version) -> Version {
+        return when (val nextVersionStr = nextVersion.orNull) {
+            // no explicit next version; bump from release version as specified
+            null ->
+                when (val value = releaseBump.get()) {
+                    "major" -> { it -> it.nextMajor("SNAPSHOT") }
+                    "minor" -> { it -> it.nextMinor("SNAPSHOT") }
+                    "patch" -> { it -> it.nextPatch("SNAPSHOT") }
+                    else ->
+                        releasePluginError(
+                            "Invalid release bump value '$value'; expected 'major', 'minor', or 'patch'"
+                        )
+                }
+
+            // explicit version specified; validate and use it
+            else -> {
+                val nextVersion = Version.parse(nextVersionStr)
+                check(nextVersion.isPreRelease) {
+                    "Expected pre-release version for next version: $nextVersion"
+                }
+                val incrementer = { _: Version -> nextVersion }
+                incrementer
+            }
         }
     }
 

@@ -96,6 +96,7 @@ release {
     // template for new version commit message
     newVersionCommitMessage = "[Release] - new version commit:"
 
+
     preReleaseHooks {
         // copy templates from a master location, expanding version references and other properties
         // by default `0.1.22` is expanded using the release version
