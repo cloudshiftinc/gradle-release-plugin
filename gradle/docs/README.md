@@ -17,7 +17,7 @@ Install the plugin:
 
 ```kotlin
 plugins {
-    id("io.cloudshiftdev.release") version "0.2.0"
+    id("io.cloudshiftdev.release") version "${version}"
 }
 ```
 
@@ -126,10 +126,9 @@ This plugin is tested against the below matrix of Java and Gradle versions, on L
 
 Tests are designed to validate against Java LTS versions and leading-edge Java/Gradle versions.
 
-| Java Version | Gradle Version |
+| Java version | Gradle Version |
 | --- | --- |
-| Java 8 | Gradle 7.0.2, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
-| Java 11 | Gradle 7.0.2, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
-| Java 17 | Gradle 7.3.3, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-2 |
-| Java 20 | Gradle 8.3-rc-2 |
+#foreach( ${'$'}record in ${'$'}compatTestMatrix )
+| Java ${'$'}{record.first} | Gradle ${'$'}{record.second} |
+#end
 

@@ -4,7 +4,6 @@ package io.cloudshiftdev.gradle.release.hooks
 
 import com.google.common.hash.Hashing
 import com.google.common.io.CharStreams
-import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import io.cloudshiftdev.gradle.release.util.releasePluginError
 import io.github.z4kn4fein.semver.Version

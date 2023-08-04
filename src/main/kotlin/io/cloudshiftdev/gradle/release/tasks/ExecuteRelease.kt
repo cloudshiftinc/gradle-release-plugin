@@ -1,5 +1,6 @@
 package io.cloudshiftdev.gradle.release.tasks
 
+import io.cloudshiftdev.gradle.release.hooks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.PropertiesFile
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import io.github.z4kn4fein.semver.Version
@@ -12,7 +13,12 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.*
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(

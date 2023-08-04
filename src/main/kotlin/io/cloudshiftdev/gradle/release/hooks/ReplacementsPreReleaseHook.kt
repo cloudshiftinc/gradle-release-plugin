@@ -2,7 +2,6 @@
 
 package io.cloudshiftdev.gradle.release.hooks
 
-import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import java.io.File
 import java.util.*

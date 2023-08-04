@@ -10,12 +10,12 @@ plugins {
     // convention plugin from build-logic
     id("io.cloudshiftdev.gradle.conventions")
 
-     alias(libs.plugins.release)
+    alias(libs.plugins.release)
 }
 
 // define group here to work around inability to apply published version of this plugin to this project
 // when the group is defined in 'gradle.properties'
-group="io.cloudshiftdev.gradle"
+group = "io.cloudshiftdev.gradle"
 
 gradlePlugin {
     website.set("https://github.com/cloudshiftinc/gradle-release-plugin")
@@ -27,6 +27,31 @@ gradlePlugin {
             displayName = "Gradle Release Plugin"
             description = project.description
             tags.set(listOf("release", "version", "release management"))
+        }
+    }
+}
+
+release {
+    preReleaseHooks {
+        processTemplates {
+            from(fileTree("gradle/docs") { include("**/*.md") })
+            into(layout.projectDirectory)
+            propertyFrom(
+                "compatTestMatrix",
+                provider {
+                    file("stutter.lockfile").bufferedReader().use { reader ->
+                        val props = Properties()
+                        props.load(reader)
+
+                        props.entries.map {
+                            val javaVersion = it.key.toString().removePrefix("java").toInt()
+                            val gradleVersions =
+                                it.value.toString().split(",").joinToString(", ")
+                            javaVersion to gradleVersions
+                        }.sortedBy { it.first }
+                    }
+                },
+            )
         }
     }
 }
@@ -115,15 +140,3 @@ tasks {
     }
 }
 
-fun prepareCompatMatrix(matrixFile: File): List<Pair<Int, String>> {
-    return matrixFile.bufferedReader().use { reader ->
-        val props = Properties()
-        props.load(reader)
-
-        props.entries.map {
-            val javaVersion = it.key.toString().removePrefix("java").toInt()
-            val gradleVersions = it.value.toString().split(",").joinToString(", ")
-            javaVersion to gradleVersions
-        }.sortedBy { it.first }
-    }
-}

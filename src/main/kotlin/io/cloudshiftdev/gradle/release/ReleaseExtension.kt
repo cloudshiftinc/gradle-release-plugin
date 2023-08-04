@@ -2,9 +2,9 @@
 
 package io.cloudshiftdev.gradle.release
 
+import io.cloudshiftdev.gradle.release.hooks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.hooks.ReplacementsPreReleaseHook
 import io.cloudshiftdev.gradle.release.hooks.TemplatesPreReleaseHook
-import io.cloudshiftdev.gradle.release.tasks.PreReleaseHook
 import javax.inject.Inject
 import kotlin.reflect.KClass
 import org.gradle.api.Action
