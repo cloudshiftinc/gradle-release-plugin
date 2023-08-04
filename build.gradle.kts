@@ -10,9 +10,12 @@ plugins {
     // convention plugin from build-logic
     id("io.cloudshiftdev.gradle.conventions")
 
-   // id("io.cloudshiftdev.release") version "0.1.20"
-    //    alias(libs.plugins.release)
+     alias(libs.plugins.release)
 }
+
+// define group here to work around inability to apply published version of this plugin to this project
+// when the group is defined in 'gradle.properties'
+group="io.cloudshiftdev.gradle"
 
 gradlePlugin {
     website.set("https://github.com/cloudshiftinc/gradle-release-plugin")
