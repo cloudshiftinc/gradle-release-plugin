@@ -1,4 +1,3 @@
-
 import com.gradle.publish.PublishTask
 import java.util.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -11,7 +10,7 @@ plugins {
     // convention plugin from build-logic
     id("io.cloudshiftdev.gradle.conventions")
 
-    //id("io.cloudshiftdev.release") version "0.1.20" apply false
+   // id("io.cloudshiftdev.release") version "0.1.20"
     //    alias(libs.plugins.release)
 }
 
@@ -39,7 +38,6 @@ dependencies {
     implementation(libs.velocity)
 
     // testing libraries for both unit & compatibility tests
-    testingBase(platform(libs.junit.bom))
     testingBase(platform(libs.junit.bom))
     testingBase(libs.junit.jupiter.engine)
 
