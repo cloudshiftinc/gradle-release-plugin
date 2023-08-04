@@ -132,6 +132,7 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
             // validation on subsequent releases
             val srcSha256File = source.parentFile.resolve("${source.name}.sha256")
             srcSha256File.writeText(target.sha256())
+            target.setReadOnly()
         }
     }
 

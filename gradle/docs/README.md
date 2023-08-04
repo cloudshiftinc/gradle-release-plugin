@@ -96,7 +96,7 @@ release {
     incrementAfterRelease = true
     
     // template for new version commit message
-    newVersionCommitMessage = "[Release] - new version commit: {{nextPreReleaseVersion}}"
+    newVersionCommitMessage = "[Release] - new version commit: {{releaseVersion}} -> {{nextPreReleaseVersion}}"
 
     // which version segment is incremented for the next pre-release version
     releaseBump = "patch"
@@ -111,7 +111,7 @@ release {
         //
         // this can be repeated multiple times for different sources/targets etc as required
         processTemplates {
-            from(fileTree("gradle/templates") { include("**/*.md") })
+            from(fileTree("gradle/docs") { include("**/*.md") })
             into(project.layout.projectDirectory)
         }
         
@@ -129,15 +129,15 @@ release {
 
 # Templates
 
-Ths plugin uses [Mustache](https://mustache.github.io) templates.
+This plugin uses [Mustache](https://mustache.github.io) templates.
 
 The following template contexts are exposed for use in templates:
 
-| Use Case                      | Template Context                                                                                                                                         |
-|-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Pre-release template hook     | `releaseVersion`: version being released                                                                                                                 |
-| Release commit /tag templates | `preReleaseVersion`: current version prior to release<br/>`releaseVersion`: version being released                                                       |
-| Post release commit template  | `preReleaseVersion`: current version prior to release<br/>`releaseVersion`: version being released<br/>`nextPreReleaseVersion`: next pre-release version |
+| Use Case                       | Template Context                                                                                                                                         |
+|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Pre-release template hook      | `releaseVersion`: version being released                                                                                                                 |
+| Release commit / tag templates | `preReleaseVersion`: current version prior to release<br/>`releaseVersion`: version being released                                                       |
+| Post release commit template   | `preReleaseVersion`: current version prior to release<br/>`releaseVersion`: version being released<br/>`nextPreReleaseVersion`: next pre-release version |
 
 
 ## Controlling the release version
