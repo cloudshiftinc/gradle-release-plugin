@@ -128,7 +128,7 @@ Tests are designed to validate against Java LTS versions and leading-edge Java/G
 
 | Java version | Gradle Version |
 | --- | --- |
-#foreach( ${'$'}record in ${'$'}compatTestMatrix )
-| Java ${'$'}{record.first} | Gradle ${'$'}{record.second} |
+#foreach( ${record} in ${compatTestMatrix} )
+| Java ${record.first} | Gradle ${record.second} |
 #end
 

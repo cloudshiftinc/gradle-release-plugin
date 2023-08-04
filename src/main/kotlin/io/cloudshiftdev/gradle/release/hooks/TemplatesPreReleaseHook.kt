@@ -60,8 +60,8 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
         val engine = VelocityEngine()
 
         val props = Properties()
-        props["runtime.references.strict"] = "true"
-        props["runtime.references.strict.escape"] = "true"
+        props["runtime.strict_mode.enable"] = "true"
+        props["runtime.strict_mode.escape"] = "true"
         engine.init(props)
 
         val properties =
