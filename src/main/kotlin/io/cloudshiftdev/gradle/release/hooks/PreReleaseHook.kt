@@ -9,8 +9,8 @@ public interface PreReleaseHook {
     public fun execute(context: HookContext)
 
     public data class HookContext(
-        val previousVersion: Version,
-        val incomingVersion: Version,
+        val preReleaseVersion: Version,
+        val releaseVersion: Version,
         val workingDirectory: File,
         val dryRun: Boolean
     )

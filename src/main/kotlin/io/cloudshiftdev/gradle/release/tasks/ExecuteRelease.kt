@@ -2,14 +2,13 @@ package io.cloudshiftdev.gradle.release.tasks
 
 import com.github.mustachejava.DefaultMustacheFactory
 import io.cloudshiftdev.gradle.release.hooks.PreReleaseHook
-import io.cloudshiftdev.gradle.release.util.PropertiesFile
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
+import io.cloudshiftdev.gradle.release.util.VersionProperties
 import io.cloudshiftdev.gradle.release.util.releasePluginError
 import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.nextMajor
 import io.github.z4kn4fein.semver.nextMinor
 import io.github.z4kn4fein.semver.nextPatch
-import io.github.z4kn4fein.semver.toVersion
 import java.io.StringReader
 import java.io.StringWriter
 import javax.inject.Inject
@@ -132,7 +131,7 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         return when (val releaseVersionStr = releaseVersion.orNull) {
             null -> { it -> it.nextPatch() }
             else -> {
-                val releaseVersion = Version.parse(releaseVersionStr)
+                val releaseVersion = Version.parse(releaseVersionStr.trim())
                 check(!releaseVersion.isPreRelease) {
                     "Cannot use pre-release version for release version: $releaseVersionStr"
                 }
@@ -158,7 +157,7 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
 
             // explicit version specified; validate and use it
             else -> {
-                val nextVersion = Version.parse(nextVersionStr)
+                val nextVersion = Version.parse(nextVersionStr.trim())
                 check(nextVersion.isPreRelease) {
                     "Expected pre-release version for next version: $nextVersion"
                 }
@@ -168,7 +167,10 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         }
     }
 
-    private fun executePreReleaseHooks(hooks: List<PreReleaseHook>, versions: Versions) {
+    private fun executePreReleaseHooks(
+        hooks: List<PreReleaseHook>,
+        versions: VersionProperties.Versions
+    ) {
         try {
             hooks.forEachIndexed { index, hook ->
                 val workingDirectory = temporaryDir.resolve("pre-release-hook-$index")
@@ -191,25 +193,14 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         }
     }
 
-    private fun incrementVersion(versionIncrementer: (Version) -> Version): Versions {
-
-        val propertiesFile = versionPropertiesFile.get().asFile
-        val currentVersionStr =
-            PropertiesFile.loadProperty(versionPropertyName.get(), propertiesFile)
-                ?: "0.1.0-SNAPSHOT"
-        val currentVersion = currentVersionStr.toVersion()
-
-        val nextVersion = versionIncrementer(currentVersion)
-
-        logger.lifecycle("Incremented version from $currentVersion to $nextVersion")
-
-        PropertiesFile.updateProperty(
-            versionPropertyName.get(),
-            nextVersion.toString(),
-            propertiesFile,
+    private fun incrementVersion(
+        versionIncrementer: (Version) -> Version
+    ): VersionProperties.Versions {
+        return VersionProperties.incrementVersion(
+            versionPropertiesFile = versionPropertiesFile.get().asFile,
+            versionPropertyName = versionPropertyName.get(),
+            versionIncrementer = versionIncrementer
         )
-
-        return Versions(previousVersion = currentVersion, version = nextVersion)
     }
 
     @Internal
@@ -229,6 +220,4 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
     }
 
     private val mustacheFactory = DefaultMustacheFactory()
-
-    private data class Versions(val previousVersion: Version, val version: Version)
 }

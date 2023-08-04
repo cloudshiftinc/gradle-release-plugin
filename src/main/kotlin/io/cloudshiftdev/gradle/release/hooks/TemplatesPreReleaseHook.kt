@@ -69,7 +69,7 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
     }
 
     override fun execute(context: PreReleaseHook.HookContext) {
-        val incomingVersion = context.incomingVersion
+        val incomingVersion = context.releaseVersion
 
         val actions = mutableListOf(templateCopyAction(incomingVersion))
 

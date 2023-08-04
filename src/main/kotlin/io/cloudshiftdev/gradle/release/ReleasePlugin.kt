@@ -5,6 +5,7 @@ package io.cloudshiftdev.gradle.release
 import io.cloudshiftdev.gradle.release.tasks.AbstractReleaseTask
 import io.cloudshiftdev.gradle.release.tasks.DefaultPreReleaseChecks
 import io.cloudshiftdev.gradle.release.tasks.ExecuteRelease
+import io.cloudshiftdev.gradle.release.tasks.SetCurrentVersion
 import io.cloudshiftdev.gradle.release.util.PluginSpec
 import io.cloudshiftdev.gradle.release.util.gradlePlatformCompatibility
 import org.gradle.api.JavaVersion
@@ -109,6 +110,12 @@ public abstract class ReleasePlugin : Plugin<Project> {
                 group = releaseGroup
                 dependsOn(preRelease)
                 dependsOn(executeRelease)
+            }
+
+            tasks.register<SetCurrentVersion>("setCurrentVersion") {
+                group = releaseGroup
+                versionPropertiesFile.set(releaseExtension.versionProperties.propertiesFile)
+                versionPropertyName.set(releaseExtension.versionProperties.propertyName)
             }
         }
 
