@@ -1,3 +1,5 @@
+@file:Suppress("UnstableApiUsage")
+
 package io.cloudshiftdef.gradle.release
 
 import io.cloudshiftdef.gradle.release.fixture.ScriptLanguage
@@ -45,7 +47,7 @@ class TemplatePreReleaseHookTests : FunSpec() {
                         val templatesDir = it.workingDir.resolve("templates")
                         templatesDir.mkdirs()
                         val template = templatesDir.resolve("README.md")
-                        template.writeText("Hello from \$version")
+                        template.writeText("Hello from {{releaseVersion}}")
 
                         it.stageAndCommit("Setup templates")
                         it.push()
@@ -70,7 +72,7 @@ class TemplatePreReleaseHookTests : FunSpec() {
             }
         }
 
-        test("Advanced velocity template works") {
+        test("Advanced mustache template works") {
             val testEnvironment = gradleTestEnvironment {
                 baseReleasePluginConfiguration()
                 gradleBuild {
@@ -114,11 +116,11 @@ class TemplatePreReleaseHookTests : FunSpec() {
                         """
                         | Java version | Gradle Version |
                         | --- | --- |
-                        #foreach( ${'$'}record in ${'$'}compatTestMatrix )
-                        | Java ${'$'}{record.first} | Gradle ${'$'}{record.second} |
-                        #end
+                        {{#compatTestMatrix}}
+                        | Java {{first}} | Gradle {{second}} |
+                        {{/compatTestMatrix}}
                     """
-                            .trimIndent()
+                            .trimIndent(),
                     )
 
                     it.stageAndCommit("Setup templates")

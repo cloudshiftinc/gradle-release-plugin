@@ -63,7 +63,7 @@ configurations.compatTestImplementation.get().extendsFrom(testingBase)
 dependencies {
     implementation(libs.guava)
     implementation(libs.semver)
-    implementation(libs.velocity)
+    implementation(libs.mustache)
 
     // testing libraries for both unit & compatibility tests
     testingBase(platform(libs.junit.bom))
@@ -80,6 +80,7 @@ dependencies {
 
     // only for compatibility testing
     compatTestImplementation(gradleTestKit())
+//    compatTestImplementation(project(":"))
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")

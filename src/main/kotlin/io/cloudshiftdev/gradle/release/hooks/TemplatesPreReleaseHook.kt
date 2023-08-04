@@ -2,16 +2,14 @@
 
 package io.cloudshiftdev.gradle.release.hooks
 
+import com.github.mustachejava.DefaultMustacheFactory
 import com.google.common.hash.Hashing
 import com.google.common.io.CharStreams
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import io.cloudshiftdev.gradle.release.util.releasePluginError
 import io.github.z4kn4fein.semver.Version
 import java.io.File
-import java.util.*
 import javax.inject.Inject
-import org.apache.velocity.VelocityContext
-import org.apache.velocity.app.VelocityEngine
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.EmptyFileVisitor
 import org.gradle.api.file.FileTree
@@ -38,7 +36,7 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
     )
 
     override fun validate() {
-        val actions = mutableListOf(velocityTemplateCopyAction())
+        val actions = mutableListOf(templateCopyAction())
 
         if (templateSpec.preventTampering.get()) actions.add(VerifyChecksumCopyAction())
 
@@ -46,40 +44,32 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
             CopyFileVisitor(
                 actions,
                 templateSpec.destinationDir.get().asFile,
-                templateSpec.pathTransformer.get()
+                templateSpec.pathTransformer.get(),
             )
         templateSpec.source.excludeChecksumPatterns().visit(visitor)
     }
 
-    private fun velocityTemplateCopyAction(version: Version? = null): CopyAction {
+    private fun templateCopyAction(releaseVersion: Version? = null): CopyAction {
         val effectiveVersion =
-            when (version) {
+            when (releaseVersion) {
                 null -> Version.parse("99.99.99")
-                else -> version
+                else -> releaseVersion
             }
-        val engine = VelocityEngine()
-
-        val props = Properties()
-        props["runtime.strict_mode.enable"] = "true"
-        props["runtime.strict_mode.escape"] = "true"
-        engine.init(props)
 
         val properties =
-            mapOf("version" to effectiveVersion.toString(), "versionObj" to effectiveVersion) +
+            mapOf("releaseVersion" to effectiveVersion.toString(), "releaseVersionObj" to effectiveVersion) +
                 templateSpec.properties.get()
 
-        val propTypes = properties.map { "${it.key}: ${it.value} (type: ${it.value.javaClass})" }
+        val propTypes = properties.map { "${it.key}: ${it.value} (${it.value.javaClass})" }
         logger.info("Template properties: $propTypes")
 
-        val velocityContext = VelocityContext(properties)
-
-        return VelocityTemplateCopyAction(engine, velocityContext, version == null)
+        return MustacheTemplateCopyAction(properties, releaseVersion == null)
     }
 
     override fun execute(context: PreReleaseHook.HookContext) {
         val incomingVersion = context.incomingVersion
 
-        val actions = mutableListOf(velocityTemplateCopyAction(incomingVersion))
+        val actions = mutableListOf(templateCopyAction(incomingVersion))
 
         if (templateSpec.preventTampering.get()) {
             actions.add(WriteChecksumCopyAction())
@@ -89,7 +79,7 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
             CopyFileVisitor(
                 actions,
                 templateSpec.destinationDir.get().asFile,
-                templateSpec.pathTransformer.get()
+                templateSpec.pathTransformer.get(),
             )
         templateSpec.source.excludeChecksumPatterns().visit(visitor)
     }
@@ -114,25 +104,23 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
         fun copy(source: File, target: File, relativePath: RelativePath)
     }
 
-    private class VelocityTemplateCopyAction(
-        private val engine: VelocityEngine,
-        private val context: VelocityContext,
+    private class MustacheTemplateCopyAction(
+        private val context: Map<String, Any>,
         private val dryRun: Boolean
     ) : CopyAction {
+        private val mustacheFactory = DefaultMustacheFactory()
+
         override fun copy(source: File, target: File, relativePath: RelativePath) {
-            val writer =
-                when (dryRun) {
-                    true -> CharStreams.nullWriter()
-                    else -> {
-                        target.parentFile.mkdirs()
-                        target.bufferedWriter()
-                    }
+            val template =
+                source.bufferedReader().use { mustacheFactory.compile(it, source.toString()) }
+
+            when (dryRun) {
+                true -> CharStreams.nullWriter()
+                else -> {
+                    target.parentFile.mkdirs()
+                    target.bufferedWriter()
                 }
-            source.bufferedReader().use { reader ->
-                writer.use { writer ->
-                    engine.evaluate(context, writer, relativePath.toString(), reader)
-                }
-            }
+            }.use { template.execute(it, context) }
         }
     }
 
@@ -153,7 +141,7 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
                 !target.exists() -> {}
                 target.sha256() != srcSha256File.readText() ->
                     releasePluginError(
-                        "$target tampered with; please delete and do edits in $source"
+                        "$target tampered with; please delete and do edits in $source",
                     )
             }
         }

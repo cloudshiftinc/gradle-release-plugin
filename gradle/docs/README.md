@@ -17,7 +17,7 @@ Install the plugin:
 
 ```kotlin
 plugins {
-    id("io.cloudshiftdev.release") version "${version}"
+    id("io.cloudshiftdev.release") version "{{releaseVersion}}"
 }
 ```
 
@@ -44,6 +44,7 @@ Default configuration:
 
 *when using Gradle Kotlin DSL on Gradle < 8.2 replace assignment `=` with `.set`*
 
+{{=<% %>=}}
 ```kotlin
 release {
     versionProperties {
@@ -83,29 +84,29 @@ release {
     }
     
     // template for release commit message
-    releaseCommitMessage = "[Release] - release commit:"
+    releaseCommitMessage = "[Release] - release commit: {{preReleaseVersion}} -> {{releaseVersion}}"
     
-    // template for version tag. `$version` is replaced with the release version.
-    versionTagTemplate = "v$version"
+    // template for version tag.
+    versionTagTemplate = "v{{releaseVersion}}"
     
     // template for version tag commit message
-    versionTagCommitMessage = "[Release] - creating tag:"
+    versionTagCommitMessage = "[Release] - creating tag: {{preReleaseVersion}} -> {{releaseVersion}}"
     
     // whether to increment the version after a release
     incrementAfterRelease = true
     
     // template for new version commit message
-    newVersionCommitMessage = "[Release] - new version commit:"
+    newVersionCommitMessage = "[Release] - new version commit: {{nextPreReleaseVersion}}"
 
     preReleaseHooks {
-        // copy templates from a master location, expanding version references and other properties
-        // by default `$version` is expanded using the release version
+        // copy Mustache templates from a master location, processing version references and other properties
+        // The properties `version` and `versionObj` are exposed by default
         // other expansion properties can be added via `property` or `properties`
         // note that properties can be providers for lazy evaluation
         //
         // this can be repeated multiple times for different sources/targets etc as required
         processTemplates {
-            from(fileTree("gradle/templates"))
+            from(fileTree("gradle/templates") { include("**/*.md") })
             into(project.layout.projectDirectory)
         }
         
@@ -119,8 +120,79 @@ release {
     }
 }
 ```
+<%={{ }}=%>
 
-## Test Matrix
+# Templates
+
+Ths plugin use [Mustache](https://mustache.github.io) templates.
+
+The following template contexts are exposed for use in templates
+
+| Use Case                      | Template Context                                                                                                                                         |
+|-------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Pre-release template hook     | `releaseVersion`: version being released                                                                                                                 |
+| Release commit /tag templates | `preReleaseVersion`: current version prior to release<br/>`releaseVersion`: version being released                                                       |
+| Post release commit template  | `preReleaseVersion`: current version prior to release<br/>`releaseVersion`: version being released<br/>`nextPreReleaseVersion`: next pre-release version |
+
+
+## Controlling the release version
+
+By default a release will increment the `patch` segment of the version, e.g. `1.2.2-SNAPSHOT` releases `1.2.2` with the next version being `1.2.3-SNAPSHOT`
+
+If you wish to...
+
+### Increment the next version post-release
+
+`./gradlew release -Prelease.bump=major/minor/patch`
+
+| `release.bump` | Current Version | Release Version | Next Version |
+|----------------| --- | --- | --- |
+| `major`        | 1.2.2-SNAPSHOT | 1.2.2 | 2.0.0-SNAPSHOT |
+| `minor`        | 1.2.2-SNAPSHOT | 1.2.2 | 1.3.0-SNAPSHOT |
+| `patch`        | 1.2.2-SNAPSHOT | 1.2.2 | 1.2.3-SNAPSHOT |
+
+`patch` is the default behaviour when `release.bump` is not specified.
+
+### Specify the release version
+
+`./gradlew release -Prelease.version=2.0.0`
+
+| Current Version | `release.version` | Next Version   |
+| --- |-------------------|----------------|
+| 1.2.2-SNAPSHOT | 2.0.0             | 2.0.1-SNAPSHOT |
+
+This can be combined with `release.bump` to set the next version:
+
+`./gradlew release -Prelease.version=2.0.0 -Prelease.bump=major/minor/patch`
+
+| `release.bump` | Current Version | `release.version` | Next Version   |
+|----------------| --- |-------------------|----------------|
+| `major`         | 1.2.2-SNAPSHOT   | 2.0.0             | 3.0.0-SNAPSHOT |
+| `minor` | 1.2.2-SNAPSHOT   | 2.0.0             | 2.1.0-SNAPSHOT |
+| `patch` | 1.2.2-SNAPSHOT   | 2.0.0             | 2.0.1-SNAPSHOT |
+
+For full control the next version can be explicitly set (it _must_ be a SNAPSHOT version):
+
+`./gradlew release -Prelease.version=2.0.0 -Prelease.next-version=2.3.0-SNAPSHOT`
+
+| Current Version | `release.version` | `release.next-version` |
+| --- |-------------------|------------------------|
+| 1.2.2-SNAPSHOT | 2.0.0             | 2.3.0-SNAPSHOT         |
+
+## Adjusting the current version
+
+The current version can be adjusted by either editing the properties file or running the `setCurrentVersion` task:
+
+`./gradlew setCurrentVersion --version=1.3.0-SNAPSHOT`
+
+The specified version _must_ be a SNAPSHOT version.
+
+| Current Version | `--version`    | Now-current version |
+| --- |----------------|---------------------|
+| 1.2.2-SNAPSHOT | 1.3.0-SNAPSHOT | 1.3.0-SNAPSHOT     |
+
+
+# Compatibility Test Matrix
 
 This plugin is tested against the below matrix of Java and Gradle versions, on Linux, MacOS and Windows.
 

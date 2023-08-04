@@ -3,8 +3,8 @@
 [versions]
 
 [plugins]
-release = { id = "io.cloudshiftdev.release", version = "0.1.21"}
-gradlePluginPublish = { id = "com.gradle.plugin-publish", version = "1.2.0"}
+release = { id = "io.cloudshiftdev.release", version = "0.1.21" }
+gradlePluginPublish = { id = "com.gradle.plugin-publish", version = "1.2.0" }
 
 [libraries]
 
@@ -35,6 +35,6 @@ kotest-extensions-spring = { module = "io.kotest.extensions:kotest-extensions-sp
 
 guava = { module = "com.google.guava:guava", version = "32.1.2-jre" }
 semver = { module = "io.github.z4kn4fein:semver", version = "1.4.2" }
-velocity = { module = "org.apache.velocity:velocity-engine-core", version = "2.3"}
+mustache = { module = "com.github.spullara.mustache.java:compiler", version = "0.9.10" }
 
 jetbrains-kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.4.0" }

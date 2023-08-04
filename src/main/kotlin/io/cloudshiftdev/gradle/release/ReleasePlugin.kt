@@ -127,13 +127,19 @@ public abstract class ReleasePlugin : Plugin<Project> {
                 failOnPullNeeded.convention(true)
             }
 
-            releaseCommitMessage.convention("[Release] - release commit:")
+            releaseCommitMessage.convention(
+                "[Release] - release commit: {{preReleaseVersion}} -> {{releaseVersion}}"
+            )
 
-            versionTagTemplate.convention("v\$version")
-            versionTagCommitMessage.convention("[Release] - creating tag:")
+            versionTagTemplate.convention("v{{releaseVersion}}")
+            versionTagCommitMessage.convention(
+                "[Release] - creating tag: {{preReleaseVersion}} -> {{releaseVersion}}"
+            )
 
             incrementAfterRelease.convention(true)
-            newVersionCommitMessage.convention("[Release] - new version commit:")
+            newVersionCommitMessage.convention(
+                "[Release] - new version commit: {{nextPreReleaseVersion}}"
+            )
         }
         return releaseExtension
     }

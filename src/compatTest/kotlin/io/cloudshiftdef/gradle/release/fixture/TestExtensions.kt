@@ -182,7 +182,7 @@ internal class GradleBuild {
 
 internal fun GradleRunner.releasePluginConfiguration() {
     withPluginClasspath()
-    //    withDebug(true)
+    //   withDebug(true)
     withGradleVersion(
         System.getProperty("compat.gradle.version") ?: GradleVersion.current().version
     )

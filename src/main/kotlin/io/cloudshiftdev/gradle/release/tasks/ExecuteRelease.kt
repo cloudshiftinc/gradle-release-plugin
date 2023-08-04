@@ -1,5 +1,6 @@
 package io.cloudshiftdev.gradle.release.tasks
 
+import com.github.mustachejava.DefaultMustacheFactory
 import io.cloudshiftdev.gradle.release.hooks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.PropertiesFile
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
@@ -7,12 +8,15 @@ import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.nextPatch
 import io.github.z4kn4fein.semver.nextPreRelease
 import io.github.z4kn4fein.semver.toVersion
+import java.io.StringReader
+import java.io.StringWriter
 import javax.inject.Inject
 import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
@@ -22,7 +26,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(
-    because = "Releases are infrequent and by definition change the task inputs"
+    because = "Releases are infrequent and by definition change the task inputs",
 )
 public abstract class ExecuteRelease @Inject constructor(private val fs: FileSystemOperations) :
     AbstractReleaseTask() {
@@ -65,24 +69,27 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
 
         if (dryRun.get()) {
             logger.warn(
-                "DRY RUN: release not committed, tagged or pushed.  Modified files remain in-place for inspection."
+                "DRY RUN: release not committed, tagged or pushed.  Modified files remain in-place for inspection.",
             )
             return
         }
+
+        val templateContext =
+            mapOf(
+                "preReleaseVersion" to versions.previousVersion.toString(),
+                "releaseVersion" to versions.version.toString(),
+            )
 
         // add any files that may have been created/modified by pre-release tasks
         git.stageFiles()
 
         // commit anything from pre-release tasks + version bump
-        git.commit(
-            "${releaseCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}",
-        )
+        git.commit(evaluateTemplate(releaseCommitMessage, "releaseCommitMessage", templateContext))
 
         // tag with incremented version
-        val versionTag = versionTagTemplate.get().replace("\$version", versions.version.toString())
         git.tag(
-            versionTag,
-            "${versionTagCommitMessage.get()} ${versions.previousVersion} -> ${versions.version}",
+            evaluateTemplate(versionTagTemplate, "versionTag", templateContext),
+            evaluateTemplate(versionTagCommitMessage, "versionTagCommitMessage", templateContext)
         )
 
         // push everything; this finalizes the release
@@ -95,9 +102,20 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
                 // TODO - configuration for which to increment
                 it.nextPreRelease("SNAPSHOT")
             }
+            val postReleaseTemplateContext =
+                mapOf(
+                    "preReleaseVersion" to versions.previousVersion.toString(),
+                    "releaseVersion" to versions.version.toString(),
+                    "nextPreReleaseVersion" to postReleaseVersions.version.toString()
+                )
+
             git.stageFiles()
             git.commit(
-                "${newVersionCommitMessage.get()} ${postReleaseVersions.previousVersion} -> ${postReleaseVersions.version}",
+                evaluateTemplate(
+                    newVersionCommitMessage,
+                    "newVersionCommitMessage",
+                    postReleaseTemplateContext
+                )
             )
             git.push()
         }
@@ -114,7 +132,7 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
                         versions.previousVersion,
                         versions.version,
                         workingDirectory = workingDirectory,
-                        dryRun.get()
+                        dryRun.get(),
                     ),
                 )
             }
@@ -151,6 +169,19 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
     override fun getLogger(): Logger {
         return ReleasePluginLogger.wrapLogger(super.getLogger())
     }
+
+    private fun evaluateTemplate(
+        templateText: Provider<String>,
+        templateName: String,
+        context: Any
+    ): String {
+        val template = mustacheFactory.compile(StringReader(templateText.get()), templateName)
+        val sw = StringWriter()
+        template.execute(sw, context).flush()
+        return sw.toString()
+    }
+
+    private val mustacheFactory = DefaultMustacheFactory()
 
     private data class Versions(val previousVersion: Version, val version: Version)
 }
