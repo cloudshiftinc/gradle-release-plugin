@@ -115,11 +115,6 @@ release {
             into(project.layout.projectDirectory)
         }
         
-        // update files in-place with specified replacements
-        replacements {
-
-        }
-
         // custom pre-release hook
         hook<HookClass>()
     }

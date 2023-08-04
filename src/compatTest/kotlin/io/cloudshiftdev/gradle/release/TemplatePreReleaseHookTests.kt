@@ -1,13 +1,13 @@
 @file:Suppress("UnstableApiUsage")
 
-package io.cloudshiftdef.gradle.release
+package io.cloudshiftdev.gradle.release
 
-import io.cloudshiftdef.gradle.release.fixture.ScriptLanguage
-import io.cloudshiftdef.gradle.release.fixture.baseReleasePluginConfiguration
-import io.cloudshiftdef.gradle.release.fixture.failed
-import io.cloudshiftdef.gradle.release.fixture.gradleTestEnvironment
-import io.cloudshiftdef.gradle.release.fixture.stageAndCommit
-import io.cloudshiftdef.gradle.release.fixture.unpushedCommits
+import io.cloudshiftdev.gradle.release.fixture.ScriptLanguage
+import io.cloudshiftdev.gradle.release.fixture.baseReleasePluginConfiguration
+import io.cloudshiftdev.gradle.release.fixture.failed
+import io.cloudshiftdev.gradle.release.fixture.gradleTestEnvironment
+import io.cloudshiftdev.gradle.release.fixture.stageAndCommit
+import io.cloudshiftdev.gradle.release.fixture.unpushedCommits
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
