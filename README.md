@@ -17,9 +17,10 @@ Install the plugin:
 
 ```kotlin
 plugins {
-    id("io.cloudshiftdev.release") version "0.1.24"
+    id("io.cloudshiftdev.release") version "0.2.0"
 }
 ```
+The plugin must be installed on the _root_ project _only_.
 
 The plugin is currently compatible with:
 
@@ -115,11 +116,6 @@ release {
             into(project.layout.projectDirectory)
         }
         
-        // update files in-place with specified replacements
-        replacements {
-
-        }
-
         // custom pre-release hook
         hook<HookClass>()
     }
@@ -208,7 +204,20 @@ Tests are designed to validate against Java LTS versions and leading-edge Java/G
 
 | Java version | Gradle Version |
 | --- | --- |
-#foreach( ${record} in ${compatTestMatrix} )
-| Java ${record.first} | Gradle ${record.second} |
-#end
+| Java 8 | Gradle 7.0.2, 7.6.2 |
+| Java 11 | Gradle 7.0.2, 7.6.2 |
+| Java 17 | Gradle 7.3.3, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-3 |
+| Java 20 | Gradle 8.3-rc-3 |
+
+# FAQ
+
+**Q:** How do I use this plugin with non-GIT repositories such as Mercurial, SVN, Bazaar, ...?
+
+**A:** This plugin is designed to be simple and focused, supporting only Git.
+
+
+**Q:** Can I use this plugin in a multi-module Gradle project?
+
+**A:** This plugin supports multi-module Gradle projects that are based in a single Git repository at the root of the project hierarchy.
+At the present time other layouts are not supported.  Please open an issue with your use-case.
 
