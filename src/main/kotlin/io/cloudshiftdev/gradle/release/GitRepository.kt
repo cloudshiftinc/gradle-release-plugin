@@ -121,6 +121,7 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
 
         val stdOutput = ByteArrayOutputStream()
         val stdError = ByteArrayOutputStream()
+
         val execResult =
             execOps.exec {
                 workingDir = this.workingDir
@@ -129,11 +130,8 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
                 standardOutput = stdOutput
                 errorOutput = stdError
                 isIgnoreExitValue = true
-                environment =
-                    mapOf(
-                        "GIT_CURL_VERBOSE" to "1",
-                        "GIT_TRACE" to "1",
-                    )
+                environment["GIT_CURL_VERBOSE"] = "1"
+                environment["GIT_TRACE"] = "1"
             }
         logger.info("Exit code: ${execResult.exitValue}")
 
