@@ -204,9 +204,9 @@ Tests are designed to validate against Java LTS versions and leading-edge Java/G
 
 | Java version | Gradle Version |
 | --- | --- |
-#foreach( ${record} in ${compatTestMatrix} )
-| Java ${record.first} | Gradle ${record.second} |
-#end
+{{#compatTestMatrix}}
+| Java {{first}} | Gradle {{second}} |
+{{/compatTestMatrix}}
 
 # FAQ
 
@@ -217,6 +217,6 @@ Tests are designed to validate against Java LTS versions and leading-edge Java/G
 
 **Q:** Can I use this plugin in a multi-module Gradle project?
 
-**A:** This plugin works for multi-module Gradle projects that are based in a single Git repository at the root of the project hierarchy.
+**A:** This plugin supports multi-module Gradle projects that are based in a single Git repository at the root of the project hierarchy.
 At the present time other layouts are not supported.  Please open an issue with your use-case.
 
