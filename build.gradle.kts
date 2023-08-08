@@ -96,19 +96,8 @@ signing {
 
 val publishingPredicate = provider {
     val ci = System.getenv()["CI"] == "true"
-    System.getenv()
-        .filter {
-            it.key.startsWith("GITHUB_") && (it.key.contains("REF") || it.key.contains("EVENT"))
-        }
-        .forEach { println("Publishing env: ${it.key} -> ${it.value}") }
-
-    val eventName = System.getenv()["GITHUB_EVENT_NAME"]
-    val refName = System.getenv()["GITHUB_REF_NAME"]
-
     when {
         !ci || isSnapshot -> false
-        eventName == "push" && refName == "main" -> true
-        // TODO - handle PR merges
         else -> false
     }
 }

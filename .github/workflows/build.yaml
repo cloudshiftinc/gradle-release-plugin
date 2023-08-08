@@ -66,6 +66,7 @@ jobs:
     needs:
     - 'test'
     - 'check_yaml_consistency'
+    if: 'startsWith(github.event.ref, ''refs/tags/v'')'
     steps:
     - id: 'step-0'
       name: 'Checkout'

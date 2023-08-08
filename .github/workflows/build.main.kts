@@ -61,6 +61,7 @@ workflow(
             id = "release",
             needs = listOf(test),
             runsOn = RunnerType.UbuntuLatest,
+            `if` = "startsWith(github.event.ref, 'refs/tags/v')"
         ) {
             uses(name = "Checkout", action = CheckoutV3())
             uses(
