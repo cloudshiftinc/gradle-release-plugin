@@ -20,6 +20,7 @@ plugins {
     id("io.cloudshiftdev.release") version "{{releaseVersion}}"
 }
 ```
+The plugin must be installed on the _root_ project _only_.
 
 The plugin is currently compatible with:
 
@@ -206,4 +207,16 @@ Tests are designed to validate against Java LTS versions and leading-edge Java/G
 #foreach( ${record} in ${compatTestMatrix} )
 | Java ${record.first} | Gradle ${record.second} |
 #end
+
+# FAQ
+
+**Q:** How do I use this plugin with non-GIT repositories such as Mercurial, SVN, Bazaar, ...?
+
+**A:** This plugin is designed to be simple and focused, supporting only Git.
+
+
+**Q:** Can I use this plugin in a multi-module Gradle project?
+
+**A:** This plugin works for multi-module Gradle projects that are based in a single Git repository at the root of the project hierarchy.
+At the present time other layouts are not supported.  Please open an issue with your use-case.
 

@@ -8,6 +8,7 @@ import io.cloudshiftdev.gradle.release.tasks.ExecuteRelease
 import io.cloudshiftdev.gradle.release.tasks.SetCurrentVersion
 import io.cloudshiftdev.gradle.release.util.PluginSpec
 import io.cloudshiftdev.gradle.release.util.gradlePlatformCompatibility
+import io.cloudshiftdev.gradle.release.util.releasePluginError
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -32,6 +33,10 @@ public abstract class ReleasePlugin : Plugin<Project> {
     override fun apply(project: Project): Unit =
         project.run {
             checkPlatformCompatibility()
+
+            if (this != rootProject) {
+                releasePluginError("Can only apply release plugin on root project")
+            }
 
             val releaseExtension = createReleaseExtension()
 
