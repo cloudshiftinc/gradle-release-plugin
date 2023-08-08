@@ -13,8 +13,8 @@ configure<StutterExtension> {
     sparse.set(true)
     matrices {
         // cover off Java LTS releases (8, 11, 17) and leading edge (Gradle 8.3 / Java 20)
-        java(8) { compatibleRange("7.0") }
-        java(11) { compatibleRange("7.0") }
+        java(8) { compatibleRange("7.0", "8.0") }
+        java(11) { compatible("7.0.2", "7.6.2") }
         java(17) { compatibleRange("7.3") }
         java(20) { compatibleRange("8.3") }
     }
@@ -57,11 +57,11 @@ tasks {
     register("precommit") {
         group = "verification"
         dependsOn(
-                preprocessWorkflows,
-                named("check"),
-                named("stutterWriteLocks"),
-                named("compatTestJava8Gradle7.0.2"),
-                named("compatTestJava20Gradle8.3-rc-3"),
+            preprocessWorkflows,
+            named("check"),
+            named("stutterWriteLocks"),
+            named("compatTestJava8Gradle7.0.2"),
+            named("compatTestJava20Gradle8.3-rc-3"),
         )
     }
 
@@ -117,7 +117,7 @@ tasks {
             args(ktfmtArgs)
         }
 
-   named("check") { dependsOn(ktfmtFormat) }
+    named("check") { dependsOn(ktfmtFormat) }
 }
 
 
