@@ -59,7 +59,6 @@ public final class io/cloudshiftdev/gradle/release/ReleasePlugin$inlined$sam$i$o
 }
 
 public final class io/cloudshiftdev/gradle/release/ReplacementsPreReleaseHookDsl {
-	public fun <init> ()V
 	public final fun excludes ([Ljava/lang/String;)V
 	public final fun includes ([Ljava/lang/String;)V
 	public final fun replace (Ljava/lang/String;Ljava/lang/String;)V
@@ -95,33 +94,16 @@ public abstract interface class io/cloudshiftdev/gradle/release/hooks/PreRelease
 }
 
 public final class io/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext {
-	public fun <init> (Lio/github/z4kn4fein/semver/Version;Lio/github/z4kn4fein/semver/Version;Ljava/io/File;Z)V
-	public final fun component1 ()Lio/github/z4kn4fein/semver/Version;
-	public final fun component2 ()Lio/github/z4kn4fein/semver/Version;
-	public final fun component3 ()Ljava/io/File;
-	public final fun component4 ()Z
-	public final fun copy (Lio/github/z4kn4fein/semver/Version;Lio/github/z4kn4fein/semver/Version;Ljava/io/File;Z)Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext;
-	public static synthetic fun copy$default (Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext;Lio/github/z4kn4fein/semver/Version;Lio/github/z4kn4fein/semver/Version;Ljava/io/File;ZILjava/lang/Object;)Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext;
-	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDryRun ()Z
 	public final fun getPreReleaseVersion ()Lio/github/z4kn4fein/semver/Version;
 	public final fun getReleaseVersion ()Lio/github/z4kn4fein/semver/Version;
 	public final fun getWorkingDirectory ()Ljava/io/File;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class io/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices {
-	public fun <init> (Lio/cloudshiftdev/gradle/release/TemplateService;)V
-	public final fun copy (Lio/cloudshiftdev/gradle/release/TemplateService;)Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices;
-	public static synthetic fun copy$default (Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices;Lio/cloudshiftdev/gradle/release/TemplateService;ILjava/lang/Object;)Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public abstract class io/cloudshiftdev/gradle/release/tasks/AbstractReleaseTask : org/gradle/api/DefaultTask {
-	public fun <init> ()V
 	protected final fun cannotReleaseError (Ljava/lang/String;)Ljava/lang/Void;
 }
 

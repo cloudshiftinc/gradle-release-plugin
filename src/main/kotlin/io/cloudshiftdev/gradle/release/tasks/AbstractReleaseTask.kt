@@ -9,10 +9,11 @@ import org.gradle.api.tasks.Internal
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault
-public abstract class AbstractReleaseTask : DefaultTask() {
+public abstract class AbstractReleaseTask internal constructor() : DefaultTask() {
     // for Gradle 8.0+ this can be @get:ServiceReference; use @get:Internal for backwards compat
     @get:Internal internal abstract val gitRepository: Property<GitRepository>
 
+    // for Gradle 8.0+ this can be @get:ServiceReference; use @get:Internal for backwards compat
     @get:Internal internal abstract val templateService: Property<TemplateService>
 
     internal fun gitRepository(): GitRepository = gitRepository.get()

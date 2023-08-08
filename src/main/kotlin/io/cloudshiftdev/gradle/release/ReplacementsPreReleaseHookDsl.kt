@@ -2,7 +2,7 @@ package io.cloudshiftdev.gradle.release
 
 import io.cloudshiftdev.gradle.release.hooks.ReplacementsPreReleaseHook
 
-public class ReplacementsPreReleaseHookDsl {
+public class ReplacementsPreReleaseHookDsl internal constructor() {
     private val includes = mutableListOf<String>()
     private val excludes = mutableListOf<String>()
     private val replacements = mutableMapOf<String, String>()

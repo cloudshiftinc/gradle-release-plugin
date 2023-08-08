@@ -9,12 +9,13 @@ public interface PreReleaseHook {
 
     public fun execute(hookServices: HookServices, context: HookContext)
 
-    public data class HookContext(
-        val preReleaseVersion: Version,
-        val releaseVersion: Version,
-        val workingDirectory: File,
-        val dryRun: Boolean
+    public class HookContext
+    internal constructor(
+        public val preReleaseVersion: Version,
+        public val releaseVersion: Version,
+        public val workingDirectory: File,
+        public val dryRun: Boolean
     )
 
-    public data class HookServices(internal val templateService: TemplateService)
+    public class HookServices internal constructor(internal val templateService: TemplateService)
 }
