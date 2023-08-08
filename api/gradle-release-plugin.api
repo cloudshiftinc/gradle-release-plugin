@@ -1,0 +1,132 @@
+public abstract class io/cloudshiftdev/gradle/release/ReleaseExtension {
+	public abstract fun getDryRun ()Lorg/gradle/api/provider/Property;
+	public abstract fun getIncrementAfterRelease ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMissingTemplateVariableAction ()Lorg/gradle/api/provider/Property;
+	public abstract fun getNewVersionCommitMessage ()Lorg/gradle/api/provider/Property;
+	public abstract fun getReleaseBump ()Lorg/gradle/api/provider/Property;
+	public abstract fun getReleaseCommitMessage ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionTagCommitMessage ()Lorg/gradle/api/provider/Property;
+	public abstract fun getVersionTagTemplate ()Lorg/gradle/api/provider/Property;
+	public final fun gitSettings (Lorg/gradle/api/Action;)V
+	public final fun preReleaseChecks (Lorg/gradle/api/Action;)V
+	public final fun preReleaseHooks (Lorg/gradle/api/Action;)V
+	public final fun versionProperties (Lorg/gradle/api/Action;)V
+}
+
+public abstract class io/cloudshiftdev/gradle/release/ReleaseExtension$GitSettings {
+	public abstract fun getCommitOptions ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getPushOptions ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getSignTag ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class io/cloudshiftdev/gradle/release/ReleaseExtension$PreReleaseChecks {
+	public abstract fun getFailOnPullNeeded ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFailOnPushNeeded ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFailOnUncommittedFiles ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFailOnUntrackedFiles ()Lorg/gradle/api/provider/Property;
+	public abstract fun getReleaseBranchPattern ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class io/cloudshiftdev/gradle/release/ReleaseExtension$PreReleaseHooks {
+	public final fun hook (Ljava/lang/Class;[Ljava/lang/Object;)V
+	public final fun hook (Lkotlin/reflect/KClass;[Ljava/lang/Object;)V
+	public final fun processReplacements (Lorg/gradle/api/Action;)V
+	public final fun processTemplates (Lorg/gradle/api/Action;)V
+}
+
+public abstract class io/cloudshiftdev/gradle/release/ReleaseExtension$VersionProperties {
+	public abstract fun getPropertiesFile ()Lorg/gradle/api/file/RegularFileProperty;
+	public abstract fun getPropertyName ()Lorg/gradle/api/provider/Property;
+}
+
+public abstract class io/cloudshiftdev/gradle/release/ReleasePlugin : org/gradle/api/Plugin {
+	public static final field Companion Lio/cloudshiftdev/gradle/release/ReleasePlugin$Companion;
+	public static final field PluginId Ljava/lang/String;
+	public static final field PreReleaseChecksTaskName Ljava/lang/String;
+	public static final field PreReleaseTaskName Ljava/lang/String;
+	public static final field ReleaseTaskName Ljava/lang/String;
+	public fun <init> ()V
+	public synthetic fun apply (Ljava/lang/Object;)V
+	public fun apply (Lorg/gradle/api/Project;)V
+}
+
+public final class io/cloudshiftdev/gradle/release/ReleasePlugin$Companion {
+}
+
+public final class io/cloudshiftdev/gradle/release/ReleasePlugin$inlined$sam$i$org_gradle_api_Action$0 : org/gradle/api/Action {
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final synthetic fun execute (Ljava/lang/Object;)V
+}
+
+public final class io/cloudshiftdev/gradle/release/ReplacementsPreReleaseHookDsl {
+	public fun <init> ()V
+	public final fun excludes ([Ljava/lang/String;)V
+	public final fun includes ([Ljava/lang/String;)V
+	public final fun replace (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun replace (Ljava/util/Map;)V
+	public final fun replace (Lkotlin/Pair;)V
+}
+
+public abstract class io/cloudshiftdev/gradle/release/TemplateService : org/gradle/api/services/BuildService {
+	public final fun evaluateTemplate (Ljava/io/File;Ljava/io/Writer;Ljava/lang/Object;)V
+	public final fun evaluateTemplate (Lorg/gradle/api/provider/Provider;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public abstract class io/cloudshiftdev/gradle/release/TemplatesPreReleaseHookDsl {
+	public final fun allowTampering ()V
+	public final fun from (Lorg/gradle/api/file/ConfigurableFileTree;)V
+	public final fun into (Lorg/gradle/api/file/Directory;)V
+	public final fun pathTransformer (Lio/cloudshiftdev/gradle/release/hooks/PathTransformer;)V
+	public final fun properties (Ljava/util/Map;)V
+	public final fun property (Ljava/lang/String;Ljava/lang/Object;)V
+	public final fun propertyFrom (Ljava/lang/String;Lorg/gradle/api/provider/Provider;)V
+}
+
+public abstract interface annotation class io/cloudshiftdev/gradle/release/TemplatesPreReleaseHookDslMarker : java/lang/annotation/Annotation {
+}
+
+public abstract interface class io/cloudshiftdev/gradle/release/hooks/PathTransformer {
+	public abstract fun transform (Lorg/gradle/api/file/RelativePath;)Lorg/gradle/api/file/RelativePath;
+}
+
+public abstract interface class io/cloudshiftdev/gradle/release/hooks/PreReleaseHook {
+	public abstract fun execute (Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices;Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext;)V
+	public fun validate (Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices;)V
+}
+
+public final class io/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext {
+	public fun <init> (Lio/github/z4kn4fein/semver/Version;Lio/github/z4kn4fein/semver/Version;Ljava/io/File;Z)V
+	public final fun component1 ()Lio/github/z4kn4fein/semver/Version;
+	public final fun component2 ()Lio/github/z4kn4fein/semver/Version;
+	public final fun component3 ()Ljava/io/File;
+	public final fun component4 ()Z
+	public final fun copy (Lio/github/z4kn4fein/semver/Version;Lio/github/z4kn4fein/semver/Version;Ljava/io/File;Z)Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext;
+	public static synthetic fun copy$default (Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext;Lio/github/z4kn4fein/semver/Version;Lio/github/z4kn4fein/semver/Version;Ljava/io/File;ZILjava/lang/Object;)Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDryRun ()Z
+	public final fun getPreReleaseVersion ()Lio/github/z4kn4fein/semver/Version;
+	public final fun getReleaseVersion ()Lio/github/z4kn4fein/semver/Version;
+	public final fun getWorkingDirectory ()Ljava/io/File;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices {
+	public fun <init> (Lio/cloudshiftdev/gradle/release/TemplateService;)V
+	public final fun copy (Lio/cloudshiftdev/gradle/release/TemplateService;)Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices;
+	public static synthetic fun copy$default (Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices;Lio/cloudshiftdev/gradle/release/TemplateService;ILjava/lang/Object;)Lio/cloudshiftdev/gradle/release/hooks/PreReleaseHook$HookServices;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class io/cloudshiftdev/gradle/release/tasks/AbstractReleaseTask : org/gradle/api/DefaultTask {
+	public fun <init> ()V
+	protected final fun cannotReleaseError (Ljava/lang/String;)Ljava/lang/Void;
+}
+
+public abstract class io/cloudshiftdev/gradle/release/tasks/ExecuteRelease : io/cloudshiftdev/gradle/release/tasks/AbstractReleaseTask {
+	public final fun action ()V
+	public fun getLogger ()Lorg/gradle/api/logging/Logger;
+}
+

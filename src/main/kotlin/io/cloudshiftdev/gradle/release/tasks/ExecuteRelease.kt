@@ -1,6 +1,5 @@
 package io.cloudshiftdev.gradle.release.tasks
 
-import com.github.mustachejava.DefaultMustacheFactory
 import io.cloudshiftdev.gradle.release.hooks.PreReleaseHook
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import io.cloudshiftdev.gradle.release.util.VersionProperties
@@ -9,15 +8,12 @@ import io.github.z4kn4fein.semver.Version
 import io.github.z4kn4fein.semver.nextMajor
 import io.github.z4kn4fein.semver.nextMinor
 import io.github.z4kn4fein.semver.nextPatch
-import java.io.StringReader
-import java.io.StringWriter
 import javax.inject.Inject
 import org.gradle.api.file.FileSystemOperations
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
@@ -30,8 +26,9 @@ import org.gradle.work.DisableCachingByDefault
 @DisableCachingByDefault(
     because = "Releases are infrequent and by definition change the task inputs",
 )
-public abstract class ExecuteRelease @Inject constructor(private val fs: FileSystemOperations) :
-    AbstractReleaseTask() {
+public abstract class ExecuteRelease
+@Inject
+internal constructor(private val fs: FileSystemOperations) : AbstractReleaseTask() {
 
     @get:Internal internal abstract val preReleaseHooks: ListProperty<PreReleaseHook>
 
@@ -66,11 +63,13 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         val nextPreReleaseVersionIncrementer = nextPreReleaseVersionIncrementer()
 
         val git = gitRepository.get()
+        val templateService = templateService.get()
 
         val hooks = preReleaseHooks.get()
 
+        val hookServices = PreReleaseHook.HookServices(templateService = templateService)
         // validate all hooks before any mutating activities
-        hooks.forEach(PreReleaseHook::validate)
+        hooks.forEach { it.validate(hookServices) }
 
         val versions = incrementVersion(releaseVersionIncrementer)
 
@@ -93,12 +92,22 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         git.stageFiles()
 
         // commit anything from pre-release tasks + version bump
-        git.commit(evaluateTemplate(releaseCommitMessage, "releaseCommitMessage", templateContext))
+        git.commit(
+            templateService.evaluateTemplate(
+                releaseCommitMessage,
+                "releaseCommitMessage",
+                templateContext
+            )
+        )
 
         // tag with incremented version
         git.tag(
-            evaluateTemplate(versionTagTemplate, "versionTag", templateContext),
-            evaluateTemplate(versionTagCommitMessage, "versionTagCommitMessage", templateContext),
+            templateService.evaluateTemplate(versionTagTemplate, "versionTag", templateContext),
+            templateService.evaluateTemplate(
+                versionTagCommitMessage,
+                "versionTagCommitMessage",
+                templateContext
+            ),
         )
 
         // push everything; this finalizes the release
@@ -117,7 +126,7 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
 
             git.stageFiles()
             git.commit(
-                evaluateTemplate(
+                templateService.evaluateTemplate(
                     newVersionCommitMessage,
                     "newVersionCommitMessage",
                     postReleaseTemplateContext,
@@ -172,11 +181,13 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
         versions: VersionProperties.Versions
     ) {
         try {
+            val hookServices = PreReleaseHook.HookServices(templateService = templateService.get())
             hooks.forEachIndexed { index, hook ->
                 val workingDirectory = temporaryDir.resolve("pre-release-hook-$index")
                 fs.delete { delete(workingDirectory) }
                 workingDirectory.mkdirs()
                 hook.execute(
+                    hookServices,
                     PreReleaseHook.HookContext(
                         versions.previousVersion,
                         versions.version,
@@ -207,17 +218,4 @@ public abstract class ExecuteRelease @Inject constructor(private val fs: FileSys
     override fun getLogger(): Logger {
         return ReleasePluginLogger.wrapLogger(super.getLogger())
     }
-
-    private fun evaluateTemplate(
-        templateText: Provider<String>,
-        templateName: String,
-        context: Any
-    ): String {
-        val template = mustacheFactory.compile(StringReader(templateText.get()), templateName)
-        val sw = StringWriter()
-        template.execute(sw, context).flush()
-        return sw.toString()
-    }
-
-    private val mustacheFactory = DefaultMustacheFactory()
 }

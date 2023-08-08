@@ -25,11 +25,14 @@ constructor(
         val replacements: Map<String, String>
     )
 
-    override fun validate() {
+    override fun validate(hookServices: PreReleaseHook.HookServices) {
         // EMPTY
     }
 
-    override fun execute(context: PreReleaseHook.HookContext) {
+    override fun execute(
+        hookServices: PreReleaseHook.HookServices,
+        context: PreReleaseHook.HookContext
+    ) {
         processReplacementSpecs(context.workingDirectory)
     }
 

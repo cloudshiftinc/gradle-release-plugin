@@ -6,6 +6,7 @@ plugins {
     `kotlin-dsl`
     alias(libs.plugins.gradlePluginPublish)
     signing
+    id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.13.2"
 
     // convention plugin from build-logic
     id("io.cloudshiftdev.gradle.conventions")

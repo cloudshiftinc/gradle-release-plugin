@@ -2,9 +2,9 @@
 
 package io.cloudshiftdev.gradle.release.hooks
 
-import com.github.mustachejava.DefaultMustacheFactory
 import com.google.common.hash.Hashing
 import com.google.common.io.CharStreams
+import io.cloudshiftdev.gradle.release.TemplateService
 import io.cloudshiftdev.gradle.release.util.ReleasePluginLogger
 import io.cloudshiftdev.gradle.release.util.releasePluginError
 import io.github.z4kn4fein.semver.Version
@@ -35,8 +35,9 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
         val pathTransformer: Provider<PathTransformer>
     )
 
-    override fun validate() {
-        val actions = mutableListOf(templateCopyAction())
+    override fun validate(hookServices: PreReleaseHook.HookServices) {
+        val actions =
+            mutableListOf(templateCopyAction(releaseVersion = null, hookServices.templateService))
 
         if (templateSpec.preventTampering.get()) actions.add(VerifyChecksumCopyAction())
 
@@ -49,7 +50,10 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
         templateSpec.source.excludeChecksumPatterns().visit(visitor)
     }
 
-    private fun templateCopyAction(releaseVersion: Version? = null): CopyAction {
+    private fun templateCopyAction(
+        releaseVersion: Version? = null,
+        templateService: TemplateService
+    ): CopyAction {
         val effectiveVersion =
             when (releaseVersion) {
                 null -> Version.parse("99.99.99")
@@ -59,19 +63,23 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
         val properties =
             mapOf(
                 "releaseVersion" to effectiveVersion.toString(),
-                "releaseVersionObj" to effectiveVersion
+                "releaseVersionObj" to effectiveVersion,
             ) + templateSpec.properties.get()
 
         val propTypes = properties.map { "${it.key}: ${it.value} (${it.value.javaClass})" }
         logger.info("Template properties: $propTypes")
 
-        return MustacheTemplateCopyAction(properties, releaseVersion == null)
+        return MustacheTemplateCopyAction(properties, releaseVersion == null, templateService)
     }
 
-    override fun execute(context: PreReleaseHook.HookContext) {
+    override fun execute(
+        hookServices: PreReleaseHook.HookServices,
+        context: PreReleaseHook.HookContext
+    ) {
         val incomingVersion = context.releaseVersion
 
-        val actions = mutableListOf(templateCopyAction(incomingVersion))
+        val actions =
+            mutableListOf(templateCopyAction(incomingVersion, hookServices.templateService))
 
         if (templateSpec.preventTampering.get()) {
             actions.add(WriteChecksumCopyAction())
@@ -108,21 +116,18 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
 
     private class MustacheTemplateCopyAction(
         private val context: Map<String, Any>,
-        private val dryRun: Boolean
+        private val dryRun: Boolean,
+        private val templateService: TemplateService
     ) : CopyAction {
-        private val mustacheFactory = DefaultMustacheFactory()
 
         override fun copy(source: File, target: File, relativePath: RelativePath) {
-            val template =
-                source.bufferedReader().use { mustacheFactory.compile(it, source.toString()) }
-
             when (dryRun) {
                 true -> CharStreams.nullWriter()
                 else -> {
                     target.parentFile.mkdirs()
                     target.bufferedWriter()
                 }
-            }.use { template.execute(it, context) }
+            }.use { templateService.evaluateTemplate(source, it, context) }
         }
     }
 

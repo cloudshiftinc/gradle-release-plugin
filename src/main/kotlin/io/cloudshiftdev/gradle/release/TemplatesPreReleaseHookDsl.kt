@@ -14,7 +14,7 @@ import org.gradle.api.provider.Provider
 @DslMarker public annotation class TemplatesPreReleaseHookDslMarker
 
 @TemplatesPreReleaseHookDslMarker
-public abstract class TemplatesPreReleaseHookDsl {
+public abstract class TemplatesPreReleaseHookDsl internal constructor() {
     internal abstract var from: ConfigurableFileTree
     internal abstract val destinationDir: DirectoryProperty
     internal abstract val properties: MapProperty<String, Any>

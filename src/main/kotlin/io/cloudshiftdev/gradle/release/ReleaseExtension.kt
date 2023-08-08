@@ -15,7 +15,9 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.kotlin.dsl.newInstance
 
-public abstract class ReleaseExtension @Inject constructor(internal val objects: ObjectFactory) {
+public abstract class ReleaseExtension
+@Inject
+internal constructor(internal val objects: ObjectFactory) {
 
     /**
      * Whether to do a dry-run - everything except commits / pushes.
@@ -27,6 +29,15 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
      * Default: **false**
      */
     public abstract val dryRun: Property<Boolean>
+
+    /**
+     * Action to take when a template variable is missing.
+     *
+     * `exception`, `warning`, or `ignore`
+     *
+     * Default: **exception**
+     */
+    public abstract val missingTemplateVariableAction: Property<String>
 
     /**
      * Template for release commit message.
@@ -79,7 +90,7 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
         action.execute(versionProperties)
     }
 
-    public abstract class VersionProperties {
+    public abstract class VersionProperties internal constructor() {
         /**
          * Properties file where the version property resides.
          *
@@ -101,7 +112,7 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
         action.execute(gitSettings)
     }
 
-    public abstract class GitSettings {
+    public abstract class GitSettings internal constructor() {
 
         /**
          * Whether to sign git tags.
@@ -127,7 +138,9 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
 
     internal val preReleaseHooks = objects.newInstance<PreReleaseHooks>()
 
-    public abstract class PreReleaseHooks @Inject constructor(internal val objects: ObjectFactory) {
+    public abstract class PreReleaseHooks
+    @Inject
+    internal constructor(internal val objects: ObjectFactory) {
         internal abstract val hooks: ListProperty<PreReleaseHook>
 
         /**
@@ -175,7 +188,7 @@ public abstract class ReleaseExtension @Inject constructor(internal val objects:
     }
 
     // properties annotated w/ @get:Input as this object is passed into [DefaultPreReleaseChecks]
-    public abstract class PreReleaseChecks {
+    public abstract class PreReleaseChecks internal constructor() {
         /**
          * Whether to fail the release if there are untracked (unstaged) files.
          *

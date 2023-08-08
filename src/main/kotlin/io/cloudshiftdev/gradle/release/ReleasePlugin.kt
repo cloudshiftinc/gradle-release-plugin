@@ -50,13 +50,24 @@ public abstract class ReleasePlugin : Plugin<Project> {
                     }
                 }
 
+            val templateService =
+                gradle.sharedServices.registerIfAbsent("templateService", TemplateService::class) {
+                    parameters {
+                        missingTemplateVariableAction.set(
+                            releaseExtension.missingTemplateVariableAction
+                        )
+                    }
+                }
+
             val releaseGroup = "release"
             val releaseImplGroup = "other"
 
             // configure all release tasks (this catches tasks added later)
             tasks.withType<AbstractReleaseTask>().configureEach {
                 this.gitRepository.set(gitRepository)
+                this.templateService.set(templateService)
                 usesService(gitRepository)
+                usesService(templateService)
             }
 
             val defaultPreReleaseChecks =
@@ -100,7 +111,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
                     releaseBump.set(
                         providers
                             .gradleProperty("release.bump")
-                            .orElse(releaseExtension.releaseBump)
+                            .orElse(releaseExtension.releaseBump),
                     )
                     releaseVersion.convention(providers.gradleProperty("release.version"))
                     nextVersion.convention(providers.gradleProperty("release.next-version"))
@@ -157,6 +168,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
             )
 
             releaseBump.set("patch")
+            missingTemplateVariableAction.convention("exception")
         }
         return releaseExtension
     }
