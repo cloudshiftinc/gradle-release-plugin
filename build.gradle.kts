@@ -81,7 +81,6 @@ dependencies {
 
     // only for compatibility testing
     compatTestImplementation(gradleTestKit())
-//    compatTestImplementation(project(":"))
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")

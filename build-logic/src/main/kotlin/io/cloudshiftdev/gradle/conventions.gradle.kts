@@ -24,11 +24,8 @@ val ktfmt: Configuration by configurations.creating
 
 dependencies { ktfmt("com.facebook:ktfmt:0.44") }
 
-
-
 tasks {
     // ensure Kotlin workflow scripts are executed to keep the generated yaml up-to-date
-    // from
     // https://github.com/Vampire/setup-wsl/blob/master/gradle/build-logic/src/main/kotlin/net/kautler/github_actions.gradle.kts
     val preprocessWorkflows by registering
 
