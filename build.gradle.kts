@@ -96,7 +96,7 @@ signing {
 val publishingPredicate = provider {
     val ci = System.getenv()["CI"] == "true"
     when {
-        !ci || isSnapshot -> false
+        ci -> !isSnapshot
         else -> false
     }
 }
