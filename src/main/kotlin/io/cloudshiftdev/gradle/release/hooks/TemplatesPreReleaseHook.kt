@@ -125,6 +125,7 @@ constructor(private val templateSpec: TemplateSpec) : PreReleaseHook {
                 true -> CharStreams.nullWriter()
                 else -> {
                     target.parentFile.mkdirs()
+                    target.setWritable(true)
                     target.bufferedWriter()
                 }
             }.use { templateService.evaluateTemplate(source, it, context) }
