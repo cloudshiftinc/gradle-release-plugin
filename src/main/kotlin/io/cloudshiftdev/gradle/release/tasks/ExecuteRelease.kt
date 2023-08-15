@@ -88,20 +88,20 @@ internal constructor(private val fs: FileSystemOperations) : AbstractReleaseTask
                 "releaseVersion" to versions.version.toString(),
             )
 
-        // add any files that may have been created/modified by pre-release tasks
         git.stageFiles()
 
         // commit anything from pre-release tasks + version bump
         git.commit(
-            templateService.evaluateTemplate(
-                releaseCommitMessage,
-                "releaseCommitMessage",
-                templateContext
-            )
+            commitMessage =
+                templateService.evaluateTemplate(
+                    releaseCommitMessage,
+                    "releaseCommitMessage",
+                    templateContext
+                )
         )
 
         // tag with incremented version
-        git.tag(
+        git.tagRelease(
             templateService.evaluateTemplate(versionTagTemplate, "versionTag", templateContext),
             templateService.evaluateTemplate(
                 versionTagCommitMessage,
@@ -109,9 +109,6 @@ internal constructor(private val fs: FileSystemOperations) : AbstractReleaseTask
                 templateContext
             ),
         )
-
-        // push everything; this finalizes the release
-        git.push()
 
         // commit and push properties files update
         if (incrementAfterRelease.get()) {
@@ -132,7 +129,6 @@ internal constructor(private val fs: FileSystemOperations) : AbstractReleaseTask
                     postReleaseTemplateContext,
                 ),
             )
-            git.push()
         }
     }
 

@@ -134,6 +134,13 @@ internal constructor(internal val objects: ObjectFactory) {
          * Default: **<empty>**
          */
         public abstract val pushOptions: ListProperty<String>
+
+        /**
+         * Name of the git remote repository
+         *
+         * Default: **origin**
+         */
+        public abstract val remoteName: Property<String>
     }
 
     internal val preReleaseHooks = objects.newInstance<PreReleaseHooks>()

@@ -16,6 +16,7 @@ public abstract class io/cloudshiftdev/gradle/release/ReleaseExtension {
 public abstract class io/cloudshiftdev/gradle/release/ReleaseExtension$GitSettings {
 	public abstract fun getCommitOptions ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getPushOptions ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getRemoteName ()Lorg/gradle/api/provider/Property;
 	public abstract fun getSignTag ()Lorg/gradle/api/provider/Property;
 }
 

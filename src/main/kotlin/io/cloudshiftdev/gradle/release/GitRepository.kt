@@ -96,14 +96,9 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
 
     /** Commits staged files. */
     fun commit(commitMessage: String) {
-        val args = listOf("commit", "-m", commitMessage) + gitSettings().commitOptions.get()
-        git(args)
-    }
-
-    /** Pushes committed changes. */
-    fun push() {
-        val args = listOf("push", "--porcelain") + gitSettings().pushOptions.get()
-        git(args)
+        val args = mutableListOf("commit", "-m", commitMessage)
+        git(args + gitSettings().commitOptions.get())
+        doPush(currentBranch())
     }
 
     private fun git(vararg args: String, block: (GitDsl).() -> Unit = {}) =
@@ -149,10 +144,26 @@ internal abstract class GitRepository @Inject constructor(private val execOps: E
         }
     }
 
-    fun tag(tagName: String, tagMessage: String) {
-        val args = mutableListOf("tag", "-a", tagName, "-m", tagMessage)
-        if (gitSettings().signTag.get()) args.add("-s")
-        git(args)
+    fun tagRelease(tagName: String, tagMessage: String) {
+        val tagArgs = mutableListOf("tag", "-a", tagName, "-m", tagMessage)
+        if (gitSettings().signTag.get()) tagArgs.add("-s")
+        git(tagArgs)
+        doPush(tagName)
+    }
+
+    private fun doPush(refSpec: String) {
+        val remote = gitSettings().remoteName.get()
+        if (remote.isBlank()) return
+
+        val hasRemote = git("remote").outputLines.any { it.trim() == remote }
+
+        if (!hasRemote) {
+            releasePluginError("Could not push to remote $remote as repository has no such remote")
+        }
+
+        val pushArgs = listOf("push", "--porcelain", remote, refSpec)
+
+        git(pushArgs + gitSettings().pushOptions.get())
     }
 
     fun restore(file: File) {

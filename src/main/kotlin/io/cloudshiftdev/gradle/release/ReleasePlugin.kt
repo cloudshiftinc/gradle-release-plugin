@@ -59,7 +59,7 @@ public abstract class ReleasePlugin : Plugin<Project> {
                 gradle.sharedServices.registerIfAbsent("templateService", TemplateService::class) {
                     parameters {
                         missingTemplateVariableAction.set(
-                            releaseExtension.missingTemplateVariableAction
+                            releaseExtension.missingTemplateVariableAction,
                         )
                     }
                 }
@@ -148,7 +148,10 @@ public abstract class ReleasePlugin : Plugin<Project> {
                 propertyName.convention("version")
             }
 
-            gitSettings { signTag.convention(false) }
+            gitSettings {
+                signTag.convention(false)
+                remoteName.convention("origin")
+            }
 
             preReleaseChecks {
                 releaseBranchPattern.convention("main")
