@@ -110,6 +110,8 @@ internal constructor(private val fs: FileSystemOperations) : AbstractReleaseTask
             ),
         )
 
+        logger.lifecycle("Released version ${versions.version}")
+
         // commit and push properties files update
         if (incrementAfterRelease.get()) {
             // bump to next pre-release version
