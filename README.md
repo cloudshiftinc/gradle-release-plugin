@@ -17,7 +17,7 @@ Install the plugin:
 
 ```kotlin
 plugins {
-    id("io.cloudshiftdev.release") version "0.2.1"
+    id("io.cloudshiftdev.release") version "0.2.2"
 }
 ```
 The plugin must be installed on the _root_ project _only_.
