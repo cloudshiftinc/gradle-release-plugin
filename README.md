@@ -17,7 +17,7 @@ Install the plugin:
 
 ```kotlin
 plugins {
-    id("io.cloudshiftdev.release") version "0.2.0"
+    id("io.cloudshiftdev.release") version "0.2.1"
 }
 ```
 The plugin must be installed on the _root_ project _only_.
@@ -206,8 +206,8 @@ Tests are designed to validate against Java LTS versions and leading-edge Java/G
 | --- | --- |
 | Java 8 | Gradle 7.0.2, 7.6.2 |
 | Java 11 | Gradle 7.0.2, 7.6.2 |
-| Java 17 | Gradle 7.3.3, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-3 |
-| Java 20 | Gradle 8.3-rc-3 |
+| Java 17 | Gradle 7.3.3, 7.6.2, 8.0.2, 8.2.1, 8.3-rc-4 |
+| Java 20 | Gradle 8.3-rc-4 |
 
 # FAQ
 
