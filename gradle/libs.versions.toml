@@ -3,7 +3,7 @@
 [versions]
 
 [plugins]
-release = { id = "io.cloudshiftdev.release", version = "0.2.2" }
+release = { id = "io.cloudshiftdev.release", version = "0.2.3" }
 gradlePluginPublish = { id = "com.gradle.plugin-publish", version = "1.2.0" }
 jetbrains-binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version = "0.13.2" }
 
