@@ -58,7 +58,7 @@ tasks {
             named("check"),
             named("stutterWriteLocks"),
             named("compatTestJava8Gradle7.0.2"),
-            named("compatTestJava20Gradle8.3-rc-4"),
+            named("compatTestJava20Gradle8.3"),
         )
     }
 
