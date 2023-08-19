@@ -35,7 +35,7 @@ gradlePlugin {
 release {
     preReleaseHooks {
         processTemplates {
-            from(fileTree("gradle/docs") { include("**/*.md") })
+            from(fileTree("docs") { include("**/*.md") })
             into(layout.projectDirectory)
             propertyFrom(
                 "compatTestMatrix",
@@ -76,7 +76,6 @@ dependencies {
     testingBase(libs.kotest.framework.datatest)
     testingBase(libs.kotest.property)
     testingBase(libs.kotest.runner.junit5)
-
     testingBase(libs.jetbrains.kotlinx.datetime)
 
     // only for compatibility testing
@@ -115,7 +114,7 @@ tasks {
 
     named<KotlinCompile>("compileKotlin") {
         kotlinOptions {
-            // language version must match the earliest supported Gradle version
+            // language version must be compatible with the earliest supported Gradle version
             apiVersion = "1.4"
             languageVersion = "1.4"
         }
