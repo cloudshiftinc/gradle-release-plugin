@@ -31,7 +31,8 @@ workflow(
     val readTestMatrix = job(
         id = "read-test-matrix", name = "Read Test Matrix", runsOn = RunnerType.UbuntuLatest,
     ) {
-        run(command = """echo "::set-output name=compat::${'$'}(jq -c . < .github/compatibility-test-matrix.json)"""")
+        uses(name = "Checkout", action = CheckoutV3())
+        run(command = """echo "compat=${'$'}(jq -c . < .github/compatibility-test-matrix.json)" >> ${'$'}GITHUB_OUTPUT""")
     }
     val test =
         job(
