@@ -1,4 +1,4 @@
-package io.cloudshiftdev.gradle.release.fixture
+package io.cloudshiftdev.release.fixture
 
 import java.io.BufferedReader
 import java.io.File

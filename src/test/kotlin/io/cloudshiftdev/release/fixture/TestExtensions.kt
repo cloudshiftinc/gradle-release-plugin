@@ -1,4 +1,4 @@
-package io.cloudshiftdev.gradle.release.fixture
+package io.cloudshiftdev.release.fixture
 
 import io.kotest.core.TestConfiguration
 import io.kotest.engine.spec.tempdir

@@ -1,0 +1,42 @@
+[
+  {
+    "javaVersion": 8,
+    "gradleVersion": "7.0.2"
+  },
+  {
+    "javaVersion": 8,
+    "gradleVersion": "7.6.2"
+  },
+  {
+    "javaVersion": 8,
+    "gradleVersion": "8.3"
+  },
+  {
+    "javaVersion": 11,
+    "gradleVersion": "7.0.2"
+  },
+  {
+    "javaVersion": 11,
+    "gradleVersion": "7.6.2"
+  },
+  {
+    "javaVersion": 17,
+    "gradleVersion": "7.0.2"
+  },
+  {
+    "javaVersion": 17,
+    "gradleVersion": "7.6.2"
+  },
+  {
+    "javaVersion": 17,
+    "gradleVersion": "8.0.2"
+  },
+  {
+    "javaVersion": 17,
+    "gradleVersion": "8.3"
+  },
+  {
+    "javaVersion": 20,
+    "gradleVersion": "8.3"
+  }
+]

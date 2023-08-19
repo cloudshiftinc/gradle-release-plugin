@@ -59,7 +59,7 @@ release {
 
 val testingBase: Configuration by configurations.creating
 configurations.testImplementation.get().extendsFrom(testingBase)
-configurations.compatTestImplementation.get().extendsFrom(testingBase)
+//configurations.compatTestImplementation.get().extendsFrom(testingBase)
 
 dependencies {
     implementation(libs.guava)
@@ -76,10 +76,11 @@ dependencies {
     testingBase(libs.kotest.framework.datatest)
     testingBase(libs.kotest.property)
     testingBase(libs.kotest.runner.junit5)
+
     testingBase(libs.jetbrains.kotlinx.datetime)
 
     // only for compatibility testing
-    compatTestImplementation(gradleTestKit())
+    testingBase(gradleTestKit())
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
@@ -126,6 +127,22 @@ tasks {
 
     withType<PublishTask>().configureEach {
         onlyIf("Publishing only allowed on CI for non-snapshot releases") { publishingPredicate.get() }
+    }
+
+    val javaToolchainService = extensions.getByType<JavaToolchainService>()
+    named<Test>("test") {
+        systemProperty("compat.gradle.version", GradleVersion.current().version)
+    }
+
+    register<Test>("compatibilityTest") {
+        javaLauncher.set(providers.gradleProperty("compatibility-test.java-version").flatMap {
+            javaToolchainService.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(it))
+            }
+        })
+
+        // TODO: remove .get() in Gradle 9, once systemProperty is a MapProperty
+        systemProperty("compat.gradle.version", providers.gradleProperty("compatibility-test.gradle-version").orElse(GradleVersion.current().version).get())
     }
 }
 

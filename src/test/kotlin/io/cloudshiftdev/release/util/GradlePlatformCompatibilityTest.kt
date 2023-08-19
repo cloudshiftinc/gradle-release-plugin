@@ -1,5 +1,6 @@
-package io.cloudshiftdev.gradle.release.util
+package io.cloudshiftdev.release.util
 
+import io.cloudshiftdev.gradle.release.util.gradlePlatformCompatibility
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData

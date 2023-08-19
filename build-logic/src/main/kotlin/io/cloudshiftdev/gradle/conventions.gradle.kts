@@ -1,24 +1,23 @@
 package io.cloudshiftdev.gradle
 
-import org.ajoberstar.gradle.stutter.StutterExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
     java
-    id("org.ajoberstar.stutter")
+  //  id("org.ajoberstar.stutter")
 }
-
-configure<StutterExtension> {
-    sparse.set(true)
-    matrices {
-        // cover off Java LTS releases (8, 11, 17) and leading edge (Gradle 8.3 / Java 20)
-        java(8) { compatibleRange("7.0", "8.0") }
-        java(11) { compatible("7.0.2", "7.6.2") }
-        java(17) { compatibleRange("7.3") }
-        java(20) { compatibleRange("8.3") }
-    }
-}
+//
+//configure<StutterExtension> {
+//    sparse.set(true)
+//    matrices {
+//        // cover off Java LTS releases (8, 11, 17) and leading edge (Gradle 8.3 / Java 20)
+//        java(8) { compatibleRange("7.0", "8.0") }
+//        java(11) { compatible("7.0.2", "7.6.2") }
+//        java(17) { compatibleRange("7.3") }
+//        java(20) { compatibleRange("8.3") }
+//    }
+//}
 
 val ktfmt: Configuration by configurations.creating
 
@@ -56,7 +55,7 @@ tasks {
         dependsOn(
             preprocessWorkflows,
             named("check"),
-            named("stutterWriteLocks"),
+//            named("stutterWriteLocks"),
             named("compatTestJava8Gradle7.0.2"),
             named("compatTestJava20Gradle8.3"),
         )

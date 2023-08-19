@@ -1,13 +1,13 @@
-package io.cloudshiftdev.gradle.release
+package io.cloudshiftdev.release
 
-import io.cloudshiftdev.gradle.release.fixture.ScriptLanguage
-import io.cloudshiftdev.gradle.release.fixture.baseReleasePluginConfiguration
-import io.cloudshiftdev.gradle.release.fixture.currentVersion
-import io.cloudshiftdev.gradle.release.fixture.failed
-import io.cloudshiftdev.gradle.release.fixture.gitLog
-import io.cloudshiftdev.gradle.release.fixture.gitTags
-import io.cloudshiftdev.gradle.release.fixture.gradleTestEnvironment
-import io.cloudshiftdev.gradle.release.fixture.unpushedCommits
+import io.cloudshiftdev.release.fixture.ScriptLanguage
+import io.cloudshiftdev.release.fixture.baseReleasePluginConfiguration
+import io.cloudshiftdev.release.fixture.currentVersion
+import io.cloudshiftdev.release.fixture.failed
+import io.cloudshiftdev.release.fixture.gitLog
+import io.cloudshiftdev.release.fixture.gitTags
+import io.cloudshiftdev.release.fixture.gradleTestEnvironment
+import io.cloudshiftdev.release.fixture.unpushedCommits
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.datatest.withData
