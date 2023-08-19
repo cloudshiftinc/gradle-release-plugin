@@ -35,6 +35,9 @@ jobs:
     - 'check_yaml_consistency'
     steps:
     - id: 'step-0'
+      name: 'Checkout'
+      uses: 'actions/checkout@v3'
+    - id: 'step-1'
       run: 'echo "compat=$(jq -c . < .github/compatibility-test-matrix.json)" >> $GITHUB_OUTPUT'
   test:
     name: 'Test on ${{ matrix.os }} ${{ matrix.compat }}'
