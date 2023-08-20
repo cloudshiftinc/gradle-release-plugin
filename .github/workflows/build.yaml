@@ -34,7 +34,7 @@ jobs:
     needs:
     - 'check_yaml_consistency'
     outputs:
-      compat: '${{ steps.step-0.outputs.compat }}'
+      compat: '${{ steps.step-1.outputs.compat }}'
     steps:
     - id: 'step-0'
       name: 'Checkout'

@@ -38,7 +38,7 @@ workflow(
     ) {
         uses(name = "Checkout", action = CheckoutV3())
         val readMatrixStep = run(command = """echo "compat=${'$'}(jq -c . < .github/compatibility-test-matrix.json)" >> ${'$'}GITHUB_OUTPUT""")
-        jobOutputs.compat = "steps.step-0.outputs.compat"
+        jobOutputs.compat = "steps.step-1.outputs.compat"
     }
     val test =
         job(
