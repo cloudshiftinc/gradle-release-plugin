@@ -4,6 +4,7 @@
 import io.github.typesafegithub.workflows.actions.actions.CheckoutV3
 import io.github.typesafegithub.workflows.actions.actions.SetupJavaV3
 import io.github.typesafegithub.workflows.actions.gradle.GradleBuildActionV2
+import io.github.typesafegithub.workflows.domain.JobOutputs
 import io.github.typesafegithub.workflows.domain.RunnerType
 import io.github.typesafegithub.workflows.domain.triggers.PullRequest
 import io.github.typesafegithub.workflows.domain.triggers.Push
@@ -29,15 +30,20 @@ workflow(
     ),
 ) {
     val readTestMatrix = job(
-        id = "read-test-matrix", name = "Read Test Matrix", runsOn = RunnerType.UbuntuLatest,
+        id = "read-test-matrix",
+        name = "Read Test Matrix", runsOn = RunnerType.UbuntuLatest,
+        outputs = object : JobOutputs() {
+            var compat by output()
+        }
     ) {
         uses(name = "Checkout", action = CheckoutV3())
-        run(command = """echo "compat=${'$'}(jq -c . < .github/compatibility-test-matrix.json)" >> ${'$'}GITHUB_OUTPUT""")
+        val readMatrixStep = run(command = """echo "compat=${'$'}(jq -c . < .github/compatibility-test-matrix.json)" >> ${'$'}GITHUB_OUTPUT""")
+        jobOutputs.compat = "steps.step-0.outputs.compat"
     }
     val test =
         job(
-            id = "test",
-            name = """Test on ${expr("matrix.os")} ${expr("matrix.compat")}""",
+            id = "compatibility-test",
+            name = """Compatibility test of ${expr("matrix.os")} ${expr("matrix.compat")}""",
             runsOn = RunnerType.Custom(expr("matrix.os")),
             needs = listOf(readTestMatrix),
             _customArguments =
@@ -46,7 +52,7 @@ workflow(
                     "matrix" to mapOf(
                         "os" to operatingSystems,
                         "compat" to expr {
-                            fromJSON("needs.read-test-matrix.outputs.compat")
+                            fromJSON(readTestMatrix.outputs.compat)
                         },
                     ),
                 ),
