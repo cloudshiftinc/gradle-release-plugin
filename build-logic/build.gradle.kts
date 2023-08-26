@@ -10,6 +10,8 @@ dependencies {
 dependencies {
     // workaround for using version catalog in precompiled script plugins
     //  implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+
 }
 
 fun DependencyHandlerScope.plugin(id: String, version: String) = "$id:$id.gradle.plugin:$version"

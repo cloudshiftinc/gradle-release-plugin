@@ -1,5 +1,7 @@
+
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.gradle.publish.PublishTask
-import java.util.*
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -33,6 +35,7 @@ gradlePlugin {
 }
 
 release {
+    dryRun.set(true)
     preReleaseHooks {
         processTemplates {
             from(fileTree("docs") { include("**/*.md") })
@@ -40,16 +43,14 @@ release {
             propertyFrom(
                 "compatTestMatrix",
                 provider {
-                    file("stutter.lockfile").bufferedReader().use { reader ->
-                        val props = Properties()
-                        props.load(reader)
+                    file(".github/compatibility-test-matrix.json").bufferedReader().use { reader ->
 
-                        props.entries.map {
-                            val javaVersion = it.key.toString().removePrefix("java").toInt()
-                            val gradleVersions =
-                                it.value.toString().split(",").joinToString(", ")
-                            javaVersion to gradleVersions
-                        }.sortedBy { it.first }
+                        val mapper = jacksonObjectMapper()
+                        mapper.readValue<List<CompatEntry>>(reader).groupBy { it.javaVersion }
+                            .mapValues { entry ->
+                                entry.value.map { GradleVersion.version(it.gradleVersion) }
+                                    .sorted().joinToString(", ") { it.version }
+                            }.toSortedMap()
                     }
                 },
             )
@@ -57,9 +58,7 @@ release {
     }
 }
 
-val testingBase: Configuration by configurations.creating
-configurations.testImplementation.get().extendsFrom(testingBase)
-//configurations.compatTestImplementation.get().extendsFrom(testingBase)
+data class CompatEntry(val javaVersion: Int, val gradleVersion: String)
 
 dependencies {
     implementation(libs.guava)
@@ -67,20 +66,20 @@ dependencies {
     implementation(libs.mustache)
 
     // testing libraries for both unit & compatibility tests
-    testingBase(platform(libs.junit.bom))
-    testingBase(libs.junit.jupiter.engine)
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter.engine)
 
-    testingBase(platform(libs.kotest.bom))
-    testingBase(libs.kotest.assertions.core)
-    testingBase(libs.kotest.assertions.json)
-    testingBase(libs.kotest.framework.datatest)
-    testingBase(libs.kotest.property)
-    testingBase(libs.kotest.runner.junit5)
+    testImplementation(platform(libs.kotest.bom))
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.assertions.json)
+    testImplementation(libs.kotest.framework.datatest)
+    testImplementation(libs.kotest.property)
+    testImplementation(libs.kotest.runner.junit5)
 
-    testingBase(libs.jetbrains.kotlinx.datetime)
+    testImplementation(libs.jetbrains.kotlinx.datetime)
 
     // only for compatibility testing
-    testingBase(gradleTestKit())
+    testImplementation(gradleTestKit())
 }
 
 val isSnapshot = project.version.toString().endsWith("-SNAPSHOT")
