@@ -50,7 +50,7 @@ release {
                             .mapValues { entry ->
                                 entry.value.map { GradleVersion.version(it.gradleVersion) }
                                     .sorted().joinToString(", ") { it.version }
-                            }.toSortedMap()
+                            }.toSortedMap().entries
                     }
                 },
             )
