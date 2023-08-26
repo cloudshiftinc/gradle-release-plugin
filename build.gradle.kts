@@ -35,7 +35,6 @@ gradlePlugin {
 }
 
 release {
-    dryRun.set(true)
     preReleaseHooks {
         processTemplates {
             from(fileTree("docs") { include("**/*.md") })
