@@ -205,7 +205,7 @@ Tests are designed to validate against Java LTS versions and leading-edge Java/G
 | Java version | Gradle Version |
 | --- | --- |
 {{#compatTestMatrix}}
-| Java {{first}} | Gradle {{second}} |
+| Java {{key}} | Gradle {{value}} |
 {{/compatTestMatrix}}
 
 # FAQ
