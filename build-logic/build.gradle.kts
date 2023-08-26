@@ -8,7 +8,6 @@ dependencies {
 }
 
 dependencies {
-    implementation(plugin("org.ajoberstar.stutter", "0.7.2"))
     // workaround for using version catalog in precompiled script plugins
     //  implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 }

@@ -135,14 +135,39 @@ tasks {
     }
 
     register<Test>("compatibilityTest") {
-        javaLauncher.set(providers.gradleProperty("compatibility-test.java-version").flatMap {
-            javaToolchainService.launcherFor {
-                languageVersion.set(JavaLanguageVersion.of(it))
-            }
-        })
+        javaLauncher.set(
+            providers.gradleProperty("compatibility-test.java-version").flatMap {
+                javaToolchainService.launcherFor {
+                    languageVersion.set(JavaLanguageVersion.of(it))
+                }
+            },
+        )
 
         // TODO: remove .get() in Gradle 9, once systemProperty is a MapProperty
-        systemProperty("compat.gradle.version", providers.gradleProperty("compatibility-test.gradle-version").orElse(GradleVersion.current().version).get())
+        systemProperty(
+            "compat.gradle.version",
+            providers.gradleProperty("compatibility-test.gradle-version")
+                .orElse(GradleVersion.current().version).get(),
+        )
+    }
+
+    register<Test>("compatibilityTestJava8Gradle702") {
+        javaLauncher.set(
+            javaToolchainService.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(8))
+            },
+        )
+
+        systemProperty("compat.gradle.version", "7.0.2")
+    }
+
+    register<Test>("compatibilityTestJava20Gradle83") {
+        javaLauncher.set(
+            javaToolchainService.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(20))
+            },
+        )
+
+        systemProperty("compat.gradle.version", "8.3")
     }
 }
-
