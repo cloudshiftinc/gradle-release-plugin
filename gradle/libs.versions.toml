@@ -34,7 +34,7 @@ kotest-extensions-spring = { module = "io.kotest.extensions:kotest-extensions-sp
 #
 #
 
-guava = { module = "com.google.guava:guava", version = "32.1.2-jre" }
+guava = { module = "com.google.guava:guava", version = "32.1.3-jre" }
 semver = { module = "io.github.z4kn4fein:semver", version = "1.4.2" }
 mustache = { module = "com.github.spullara.mustache.java:compiler", version = "0.9.10" }
 
