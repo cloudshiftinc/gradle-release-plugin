@@ -21,7 +21,7 @@ jobs:
     steps:
     - id: 'step-0'
       name: 'Check out'
-      uses: 'actions/checkout@v3'
+      uses: 'actions/checkout@v4'
     - id: 'step-1'
       name: 'Execute script'
       run: 'rm ''.github/workflows/build.yaml'' && ''.github/workflows/build.main.kts'''
@@ -38,7 +38,7 @@ jobs:
     steps:
     - id: 'step-0'
       name: 'Checkout'
-      uses: 'actions/checkout@v3'
+      uses: 'actions/checkout@v4'
     - id: 'step-1'
       run: 'echo "compat=$(jq -c . < .github/compatibility-test-matrix.json)" >> $GITHUB_OUTPUT'
   compatibility-test:
@@ -57,7 +57,7 @@ jobs:
     steps:
     - id: 'step-0'
       name: 'Checkout'
-      uses: 'actions/checkout@v3'
+      uses: 'actions/checkout@v4'
     - id: 'step-1'
       name: 'Set up JDK'
       uses: 'actions/setup-java@v3'
@@ -85,7 +85,7 @@ jobs:
     steps:
     - id: 'step-0'
       name: 'Checkout'
-      uses: 'actions/checkout@v3'
+      uses: 'actions/checkout@v4'
     - id: 'step-1'
       name: 'Set up JDK'
       uses: 'actions/setup-java@v3'
