@@ -9,7 +9,7 @@ plugins {
 
 val ktfmt: Configuration by configurations.creating
 
-dependencies { ktfmt("com.facebook:ktfmt:0.44") }
+dependencies { ktfmt("com.facebook:ktfmt:0.47") }
 
 tasks {
     // ensure Kotlin workflow scripts are executed to keep the generated yaml up-to-date
