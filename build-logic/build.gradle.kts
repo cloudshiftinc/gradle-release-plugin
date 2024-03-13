@@ -10,7 +10,7 @@ dependencies {
 dependencies {
     // workaround for using version catalog in precompiled script plugins
     //  implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0")
 
 }
 
